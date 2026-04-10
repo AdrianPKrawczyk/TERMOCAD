@@ -11,6 +11,7 @@ const PVCalculator: React.FC<PVCalculatorProps> = ({ onGenerate }) => {
   const [effEnd, setEffEnd] = useState(25);
   const [effStep, setEffStep] = useState(1);
   const [basePrice, setBasePrice] = useState(6000); // Cena za kWp
+  const [fixedCost, setFixedCost] = useState(0); // Koszty stałe
   const [stepExtra, setStepExtra] = useState(200);
   const [unit, setUnit] = useState('zł/kWp');
 
@@ -19,9 +20,9 @@ const PVCalculator: React.FC<PVCalculatorProps> = ({ onGenerate }) => {
     const delta = 0.00001;
 
     for (let eff = effStart; eff <= effEnd + delta; eff += effStep) {
-      // WZÓR: Cena = Cena_bazowa + ( (Sprawnosc_aktualna - Sprawnosc_poczatkowa) / Skok ) * Doplata_za_skok
+      // WZÓR: Cena = Cena_bazowa + ( (Sprawnosc_aktualna - Sprawnosc_poczatkowa) / Skok ) * Doplata_za_skok + Koszty_stale
       const stepsCount = Math.round((eff - effStart) / effStep);
-      const totalCost = basePrice + (stepsCount * stepExtra);
+      const totalCost = basePrice + (stepsCount * stepExtra) + fixedCost;
 
       newVariants.push({
         id: crypto.randomUUID(),
@@ -95,6 +96,15 @@ const PVCalculator: React.FC<PVCalculatorProps> = ({ onGenerate }) => {
                   type="number" 
                   value={stepExtra}
                   onChange={(e) => setStepExtra(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-indigo-600"
+                />
+              </div>
+              <div className="col-span-1">
+                <span className="text-[10px] text-slate-400 block mb-1 font-bold">Koszty stałe (zł)</span>
+                <input 
+                  type="number" 
+                  value={fixedCost}
+                  onChange={(e) => setFixedCost(parseFloat(e.target.value) || 0)}
                   className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-indigo-600"
                 />
               </div>

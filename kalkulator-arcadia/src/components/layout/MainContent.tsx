@@ -8,7 +8,7 @@ const MainContent: React.FC = () => {
 
   return (
     <main className="flex-1 overflow-y-auto bg-slate-50 p-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         {selectedTechnologyId ? (
           <TechnologyView />
         ) : (

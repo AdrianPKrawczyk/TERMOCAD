@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Plus, Folder, FileText, Check, X, Pencil, Home, Sun, Square } from 'lucide-react';
+import { 
+  LayoutGrid, 
+  Plus, 
+  ChevronDown, 
+  ChevronUp, 
+  Settings, 
+  FileText, 
+  Pencil, 
+  X,
+  Home,
+  Square,
+  Sun
+} from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { CategoryType } from '../../store/useAppStore';
 
@@ -7,9 +19,11 @@ const Sidebar: React.FC = () => {
   const { 
     categories, 
     addCategory, 
-    renameCategory,
     addTechnology, 
+    renameCategory, 
     renameTechnology,
+    reorderCategory,
+    reorderTechnology,
     selectedTechnologyId, 
     setSelection 
   } = useAppStore();
@@ -19,6 +33,10 @@ const Sidebar: React.FC = () => {
   const [newCatType, setNewCatType] = useState<CategoryType>('PARTITIONS');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  
+  // State for adding technology inline
+  const [addingTechTo, setAddingTechTo] = useState<string | null>(null);
+  const [newTechValue, setNewTechValue] = useState('');
 
   const handleCreateCategory = () => {
     if (newCatName.trim()) {
@@ -43,18 +61,20 @@ const Sidebar: React.FC = () => {
     setEditingId(null);
   };
 
+  const handleCreateTech = (catId: string) => {
+    if (newTechValue.trim()) {
+      addTechnology(catId, newTechValue.trim());
+      setNewTechValue('');
+      setAddingTechTo(null);
+    }
+  };
+
   const getCategoryIcon = (type: CategoryType) => {
     switch (type) {
       case 'PARTITIONS': return <Home size={16} className="text-indigo-500" />;
       case 'JOINERY': return <Square size={16} className="text-emerald-500" />;
       case 'INSTALLATIONS': return <Sun size={16} className="text-amber-500" />;
     }
-  };
-
-  const handleAddTech = (catId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const name = prompt('Podaj nazwę nowej technologii:');
-    if (name) addTechnology(catId, name);
   };
 
   return (
@@ -100,7 +120,7 @@ const Sidebar: React.FC = () => {
         </div>
         
         <ul className="space-y-4">
-          {categories.map((cat) => (
+          {categories.map((cat, catIdx) => (
             <li key={cat.id} className="group">
               <div className="flex items-center justify-between px-6 py-2 text-slate-400 group-hover:text-slate-200 transition-colors">
                 <div className="flex items-center gap-2 overflow-hidden flex-1 mr-2">
@@ -118,50 +138,113 @@ const Sidebar: React.FC = () => {
                     <span className="text-xs font-black uppercase tracking-wider truncate">{cat.name}</span>
                   )}
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  {/* Reorder Buttons */}
+                  <div className="flex items-center mr-1 border-r border-slate-800 pr-1">
+                    <button 
+                      disabled={catIdx === 0}
+                      onClick={(e) => { e.stopPropagation(); reorderCategory(catIdx, -1); }}
+                      className={`p-1 hover:text-white ${catIdx === 0 ? 'text-slate-700 cursor-not-allowed' : 'text-slate-500'}`}
+                    >
+                      <ChevronUp size={12}/>
+                    </button>
+                    <button 
+                      disabled={catIdx === categories.length - 1}
+                      onClick={(e) => { e.stopPropagation(); reorderCategory(catIdx, 1); }}
+                      className={`p-1 hover:text-white ${catIdx === categories.length - 1 ? 'text-slate-700 cursor-not-allowed' : 'text-slate-500'}`}
+                    >
+                      <ChevronDown size={12}/>
+                    </button>
+                  </div>
+                  
                   {editingId !== cat.id && (
                     <button onClick={(e) => startEditing(cat.id, cat.name, e)} className="p-1 hover:text-indigo-400"><Pencil size={12}/></button>
                   )}
-                  <button onClick={(e) => handleAddTech(cat.id, e)} className="p-1 hover:text-white bg-slate-800 rounded"><Plus size={12}/></button>
+                  <button onClick={(e) => { e.stopPropagation(); setAddingTechTo(cat.id); setNewTechValue(''); }} className="p-1 hover:text-white bg-slate-800 rounded"><Plus size={12}/></button>
                 </div>
               </div>
               
               <ul className="mt-1 space-y-0.5">
-                {cat.technologies.map((tech) => (
+                {cat.technologies.map((tech, techIdx) => (
                   <li key={tech.id} className="group/tech">
-                    <button 
-                      onClick={() => setSelection(cat.id, tech.id)}
-                      className={`w-full flex items-center gap-3 pl-10 pr-6 py-2 text-sm transition-all border-r-2 ${
-                        selectedTechnologyId === tech.id 
-                        ? 'bg-indigo-500/10 text-white border-indigo-500 font-bold' 
-                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border-transparent'
-                      }`}
-                    >
-                      <FileText size={16} className={selectedTechnologyId === tech.id ? 'text-indigo-400' : 'text-slate-600'} />
-                      {editingId === tech.id ? (
-                        <input 
-                          autoFocus
-                          className="bg-slate-700 text-xs px-1 rounded w-full border border-indigo-500 text-white outline-none font-normal"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={() => saveRename(tech.id, 'tech', cat.id)}
-                          onKeyDown={(e) => e.key === 'Enter' && saveRename(tech.id, 'tech', cat.id)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <span className="truncate flex-1">{tech.name}</span>
-                      )}
-                      {editingId !== tech.id && selectedTechnologyId === tech.id && (
-                        <button 
-                          onClick={(e) => startEditing(tech.id, tech.name, e)}
-                          className="opacity-0 group-hover/tech:opacity-100 p-1 text-slate-500 hover:text-indigo-300"
-                        >
-                          <Pencil size={12}/>
-                        </button>
-                      )}
-                    </button>
+                    <div className="relative">
+                      <button 
+                        onClick={() => setSelection(cat.id, tech.id)}
+                        className={`w-full flex items-center gap-3 pl-10 pr-6 py-2 text-sm transition-all border-r-2 ${
+                          selectedTechnologyId === tech.id 
+                          ? 'bg-indigo-500/10 text-white border-indigo-500 font-bold' 
+                          : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border-transparent'
+                        }`}
+                      >
+                        <FileText size={16} className={selectedTechnologyId === tech.id ? 'text-indigo-400' : 'text-slate-600'} />
+                        {editingId === tech.id ? (
+                          <input 
+                            autoFocus
+                            className="bg-slate-700 text-xs px-1 rounded w-full border border-indigo-500 text-white outline-none font-normal"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => saveRename(tech.id, 'tech', cat.id)}
+                            onKeyDown={(e) => e.key === 'Enter' && saveRename(tech.id, 'tech', cat.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="truncate flex-1 text-left">{tech.name}</span>
+                        )}
+                        
+                        {/* Status/Action area in tech item */}
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover/tech:opacity-100 transition-opacity">
+                           <div className="flex items-center mr-1 border-r border-slate-700 pr-1">
+                              <button 
+                                disabled={techIdx === 0}
+                                onClick={(e) => { e.stopPropagation(); reorderTechnology(cat.id, techIdx, -1); }}
+                                className={`p-0.5 hover:text-white ${techIdx === 0 ? 'text-slate-800 cursor-not-allowed' : 'text-slate-500'}`}
+                              >
+                                <ChevronUp size={10}/>
+                              </button>
+                              <button 
+                                disabled={techIdx === cat.technologies.length - 1}
+                                onClick={(e) => { e.stopPropagation(); reorderTechnology(cat.id, techIdx, 1); }}
+                                className={`p-0.5 hover:text-white ${techIdx === cat.technologies.length - 1 ? 'text-slate-800 cursor-not-allowed' : 'text-slate-500'}`}
+                              >
+                                <ChevronDown size={10}/>
+                              </button>
+                            </div>
+
+                          {editingId !== tech.id && (
+                            <button 
+                              onClick={(e) => startEditing(tech.id, tech.name, e)}
+                              className="p-1 text-slate-500 hover:text-indigo-300"
+                            >
+                              <Pencil size={12}/>
+                            </button>
+                          )}
+                        </div>
+                      </button>
+                    </div>
                   </li>
                 ))}
+                
+                {/* Inline input for new technology */}
+                {addingTechTo === cat.id && (
+                  <li className="px-6 pl-10 py-2 animate-in slide-in-from-left-2 duration-200">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        autoFocus
+                        className="flex-1 bg-slate-800 border border-indigo-500 rounded px-2 py-1 text-xs text-white outline-none"
+                        placeholder="Nazwa technologii..."
+                        value={newTechValue}
+                        onChange={(e) => setNewTechValue(e.target.value)}
+                        onBlur={() => !newTechValue && setAddingTechTo(null)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleCreateTech(cat.id);
+                          if (e.key === 'Escape') setAddingTechTo(null);
+                        }}
+                      />
+                      <button onClick={() => setAddingTechTo(null)} className="text-slate-500 hover:text-white"><X size={14}/></button>
+                    </div>
+                  </li>
+                )}
               </ul>
             </li>
           ))}
@@ -169,14 +252,17 @@ const Sidebar: React.FC = () => {
       </nav>
 
       <div className="p-4 bg-slate-950/50 mt-auto border-t border-slate-800">
-        <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-inner">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-indigo-900/40">
             TC
           </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-white tracking-tight">TERMO-CAD</span>
-            <span className="text-[10px] text-slate-500 font-medium tracking-wide">Calculator 0.4.0</span>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs font-bold text-slate-200 truncate tracking-tight">TERMO-CAD</h4>
+            <p className="text-[10px] text-slate-500 truncate">Calculator 0.4.0</p>
           </div>
+          <button className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-md transition-colors">
+            <Settings size={14} />
+          </button>
         </div>
       </div>
     </aside>

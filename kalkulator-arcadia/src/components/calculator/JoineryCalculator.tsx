@@ -11,6 +11,7 @@ const JoineryCalculator: React.FC<JoineryCalculatorProps> = ({ onGenerate }) => 
   const [uEnd, setUEnd] = useState(0.6);
   const [uStep, setUStep] = useState(0.1);
   const [basePrice, setBasePrice] = useState(800);
+  const [fixedCost, setFixedCost] = useState(0); // Koszt montażu / stały
   const [stepExtra, setStepExtra] = useState(50);
   const [unit, setUnit] = useState('szt.');
 
@@ -22,9 +23,9 @@ const JoineryCalculator: React.FC<JoineryCalculatorProps> = ({ onGenerate }) => 
     const delta = 0.00001;
     
     for (let u = uStart; u >= uEnd - delta; u -= uStep) {
-      // WZÓR: Cena = Cena_bazowa + ( (U_poczatkowe - U_aktualne) / Skok ) * Doplata_za_skok
+      // WZÓR: Cena = Cena_bazowa + ( (U_poczatkowe - U_aktualne) / Skok ) * Doplata_za_skok + Koszt_staly
       const stepsCount = Math.round((uStart - u) / uStep);
-      const totalCost = basePrice + (stepsCount * stepExtra);
+      const totalCost = basePrice + (stepsCount * stepExtra) + fixedCost;
 
       newVariants.push({
         id: crypto.randomUUID(),
@@ -105,6 +106,15 @@ const JoineryCalculator: React.FC<JoineryCalculatorProps> = ({ onGenerate }) => 
                   type="number" 
                   value={stepExtra}
                   onChange={(e) => setStepExtra(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-indigo-600"
+                />
+              </div>
+              <div className="col-span-1">
+                <span className="text-[10px] text-slate-400 block mb-1 font-bold">Stałe (montaż) (zł)</span>
+                <input 
+                  type="number" 
+                  value={fixedCost}
+                  onChange={(e) => setFixedCost(parseFloat(e.target.value) || 0)}
                   className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-indigo-600"
                 />
               </div>

@@ -75,15 +75,18 @@ interface AppState {
 
   // Akcje - Ustawienia Globalne
   updateGlobalSettings: (settings: GlobalSettings) => void;
+  addBaseMaterial: (name: string, price: number) => void;
   
   // Akcje - Kategorie
   addCategory: (name: string, type: CategoryType) => void;
   renameCategory: (id: string, newName: string) => void;
+  reorderCategory: (index: number, direction: -1 | 1) => void;
   removeCategory: (id: string) => void;
   
   // Akcje - Technologie
   addTechnology: (categoryId: string, name: string) => void;
   renameTechnology: (categoryId: string, techId: string, newName: string) => void;
+  reorderTechnology: (categoryId: string, index: number, direction: -1 | 1) => void;
   updateTechnology: (categoryId: string, techId: string, updates: Partial<Technology>) => void;
   updateTechnologyNotes: (categoryId: string, techId: string, notes: string) => void;
   removeTechnology: (categoryId: string, techId: string) => void;
@@ -120,6 +123,17 @@ export const useAppStore = create<AppState>()(
       updateGlobalSettings: (settings) => 
         set({ globalSettings: settings }),
 
+      addBaseMaterial: (name, price) =>
+        set((state) => ({
+          globalSettings: {
+            ...state.globalSettings,
+            baseMaterials: {
+              ...state.globalSettings.baseMaterials,
+              [name]: price,
+            },
+          },
+        })),
+
       addCategory: (name, type) =>
         set((state) => ({
           categories: [
@@ -132,6 +146,15 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           categories: state.categories.map(c => c.id === id ? { ...c, name: newName } : c)
         })),
+
+      reorderCategory: (index, direction) =>
+        set((state) => {
+          const newCategories = [...state.categories];
+          const targetIndex = index + direction;
+          if (targetIndex < 0 || targetIndex >= newCategories.length) return state;
+          [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
+          return { categories: newCategories };
+        }),
 
       removeCategory: (id) =>
         set((state) => ({
@@ -162,13 +185,30 @@ export const useAppStore = create<AppState>()(
           ),
         })),
 
-      renameTechnology: (categoryId, techId, newName) =>
+      renameTechnology: (categoryId, id, newName) =>
         set((state) => ({
-          categories: state.categories.map(cat => 
-            cat.id === categoryId 
-              ? { ...cat, technologies: cat.technologies.map(t => t.id === techId ? { ...t, name: newName } : t) }
+          categories: state.categories.map((cat) =>
+            cat.id === categoryId
+              ? {
+                  ...cat,
+                  technologies: cat.technologies.map((t) =>
+                    t.id === id ? { ...t, name: newName } : t
+                  ),
+                }
               : cat
-          )
+          ),
+        })),
+
+      reorderTechnology: (categoryId, index, direction) =>
+        set((state) => ({
+          categories: state.categories.map((cat) => {
+            if (cat.id !== categoryId) return cat;
+            const newTechs = [...cat.technologies];
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= newTechs.length) return cat;
+            [newTechs[index], newTechs[targetIndex]] = [newTechs[targetIndex], newTechs[index]];
+            return { ...cat, technologies: newTechs };
+          }),
         })),
 
       updateTechnology: (categoryId, techId, updates) =>
