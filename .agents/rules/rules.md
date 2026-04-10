@@ -26,3 +26,9 @@ Zanim zaczniesz pisać kod lub po wykonaniu zadania, MUSISZ zarządzać plikiem 
 # Testing & Validation
 - Po napisaniu skomplikowanej logiki przeliczania (np. wyliczanie cen dla grubości izolacji), przed dodaniem jej do głównego kodu, napisz wewnątrz projektu krótki skrypt testowy (np. używając Vitest) i upewnij się, że wzory matematyczne dają poprawne wyniki.
 - Zawsze weryfikuj strukturę generowanego pliku XML z pierwotną specyfikacją.
+
+# Nadawanie numeru wersji progamu
+- Za każdą zmianą nadawaj wesję programu w fomracie X.X.X - sam oceniaj ważność zmian i ich poziomu wersji.
+
+# Commit
+- Po każdym zrobionym kroku zapoponuj treść commita, z podaniem wersji oraz po mojej akceptacji wykonaj go.
