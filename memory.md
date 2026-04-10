@@ -20,14 +20,18 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
     - [x] Rozszerzenie obszaru roboczego (max-w) i przebudowa kalkulatora przegród na układ pionowy.
     - [x] Dodanie pola "Koszty stałe / Montaż" dla okien i PV.
     - [x] Wdrożenie funkcji "Nowy materiał w bazie" bezpośrednio w widoku technologii.
-    - [x] Refaktoryzacja Sidebaru (naprawa zagnieżdżonych przycisków i dostępności ikon).
+- [x] **Krok 5: Eksport XML/XLibrary**:
+    - [x] Generator zgodny z serializacją obiektów ArCADia.
+    - [x] Pakowanie ZIP (xlibrary) przez jszip.
+- [x] **Krok 6: Zapis i Odczyt projektów (JSON)**:
+    - [x] Eksport/Import pełnego projektu.
+    - [x] Eksport/Import złączeniowy samej bazy materiałowej.
 
 ## 📝 Zadania do zrobienia (Backlog)
-- [ ] **Krok 5: Eksport XML** - Implementacja generatora XML. Musi uwzględniać ścieżki (Path) budowane z nowych kategorii i technologii.
-- [ ] **Krok 6: Persistence & JSON Export** - Eksport/import całego projektu do pliku .json.
+- [ ] Opcjonalne optymalizacje, testy brzegowe i poprawki UX w miarę testowania przez audytorów.
 
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.4.6**
+- Aktualna wersja programu: **0.5.1**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.
