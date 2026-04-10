@@ -17,15 +17,17 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
 - [x] Utworzenie pliku `memory.md`.
 - [x] Opracowanie Architektury Danych i wymagań dla XML.
 - [x] **Krok 1: Szkielet UI (Layout)** - Zbudowanie bazowego układu z użyciem Tailwind CSS.
-- [x] **Krok 2: Stan Globalny (Zustand)** - Implementacja store `useAppStore.ts` z obsługą `persist` (localStorage) i strukturami danych wg PRD.
-- [x] **Krok 3: Ustawienia Globalne** - Zbudowanie modala do edycji stawek robocizny i bazy materiałowej (z obsługą dynamicznego dodawania pozycji).
+- [x] **Krok 2: Stan Globalny (Zustand)** - Implementacja store `useAppStore.ts` z obsługą `persist`.
+- [x] **Krok 3: Ustawienia Globalne** - Zbudowanie modala do edycji stawek robocizny i bazy materiałowej.
+- [x] **Krok 4: Kalkulator Wariantów (Tryb AUTO i MANUAL)** - Implementacja widoku technologii, logiki generowania wariantów wg wzoru oraz ręcznej edycji tabeli.
 
 ## 📝 Zadania do zrobienia (Backlog)
-- [ ] **Krok 4: Kalkulator Wariantów (Tryb AUTO i MANUAL)** - Zbudowanie widoku, który dla wybranej technologii wyświetla formularz "od 5cm do 30cm" i na żywo generuje tabelę wyników (`totalCost`).
 - [ ] **Krok 5: Eksport XML** - Napisanie skryptu iterującego po stanie Zustand, budującego string XML wg precyzyjnej struktury (element `$Dummy`, odpowiednie tagi `Path`, `UnitCost`) i pozwalającego pobrać plik na dysk.
+- [ ] **Krok 6: Persistence & JSON Export** - Dodanie przycisku "Zapisz Projekt (JSON)" do Top Baru, pozwalającego na pobranie całego stanu aplikacji jako plik .json (obok localStorage).
 
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.2.0**
+- Aktualna wersja programu: **0.3.0**
 - Cena w XML (tag `<f n="UnitCost">`) musi używać **kropki** jako separatora dziesiętnego.
 - Każdy dodawany element `JobBrand` musi mieć po kolei rosnący indeks `n` (od zera).
 - Ścieżka (tag `<s n="Path">`) buduje foldery w ArCADii, np. `Ściany zewnętrzne/Styropian EPS 80`.
+- Wzór kalkulatora: `Koszt = (grubość_cm / 100) * cena_bazowa_m3 + koszty_stałe + robocizna`.

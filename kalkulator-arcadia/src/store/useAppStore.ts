@@ -36,11 +36,15 @@ export interface Category {
   name: string;
   technologies: Technology[];
 }
-
 interface AppState {
   globalSettings: GlobalSettings;
   categories: Category[];
+  selectedCategoryId: string | null;
+  selectedTechnologyId: string | null;
   
+  // Akcje - Nawigacja
+  setSelection: (categoryId: string | null, technologyId: string | null) => void;
+
   // Akcje - Ustawienia Globalne
   updateGlobalSettings: (settings: GlobalSettings) => void;
   
@@ -52,6 +56,7 @@ interface AppState {
   addTechnology: (categoryId: string, name: string) => void;
   updateTechnology: (categoryId: string, techId: string, updates: Partial<Technology>) => void;
   removeTechnology: (categoryId: string, techId: string) => void;
+  updateVariants: (categoryId: string, techId: string, variants: Variant[]) => void;
 }
 
 // --- Initial State ---
@@ -73,6 +78,11 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       globalSettings: defaultGlobalSettings,
       categories: [],
+      selectedCategoryId: null,
+      selectedTechnologyId: null,
+
+      setSelection: (categoryId, technologyId) =>
+        set({ selectedCategoryId: categoryId, selectedTechnologyId: technologyId }),
 
       updateGlobalSettings: (settings) => 
         set({ globalSettings: settings }),
@@ -131,6 +141,22 @@ export const useAppStore = create<AppState>()(
               ? {
                   ...cat,
                   technologies: cat.technologies.filter((tech) => tech.id !== techId),
+                }
+              : cat
+          ),
+          // Jeśli usuwana technologia była zaznaczona, czyścimy wybór
+          selectedTechnologyId: state.selectedTechnologyId === techId ? null : state.selectedTechnologyId,
+        })),
+
+      updateVariants: (categoryId, techId, variants) =>
+        set((state) => ({
+          categories: state.categories.map((cat) =>
+            cat.id === categoryId
+              ? {
+                  ...cat,
+                  technologies: cat.technologies.map((tech) =>
+                    tech.id === techId ? { ...tech, variants } : tech
+                  ),
                 }
               : cat
           ),

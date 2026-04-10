@@ -1,50 +1,96 @@
 import React from 'react';
-import { Layers, Plus, ChevronRight, Folder } from 'lucide-react';
+import { Plus, ChevronRight, Folder, FileText } from 'lucide-react';
+import { useAppStore } from '../../store/useAppStore';
 
 const Sidebar: React.FC = () => {
-  // Przykładowe placeholdery kategorii
-  const categories = [
-    { id: '1', name: 'Ściany zewnętrzne' },
-    { id: '2', name: 'Dachy i stropodachy' },
-    { id: '3', name: 'Podłogi na gruncie' },
-  ];
+  const { 
+    categories, 
+    addCategory, 
+    addTechnology, 
+    selectedTechnologyId, 
+    setSelection 
+  } = useAppStore();
+
+  const handleAddCategory = () => {
+    const name = prompt('Podaj nazwę nowej kategorii:');
+    if (name) addCategory(name);
+  };
+
+  const handleAddTech = (catId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const name = prompt('Podaj nazwę nowej technologii:');
+    if (name) addTechnology(catId, name);
+  };
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-[calc(100vh-64px)] overflow-y-auto">
+    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-[calc(100vh-64px)] overflow-y-auto shrink-0 border-r border-slate-800">
       <div className="p-4 border-b border-slate-800">
-        <button className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors border border-slate-700">
+        <button 
+          onClick={handleAddCategory}
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/20 font-bold text-sm"
+        >
           <Plus size={18} />
-          <span className="font-medium">Dodaj kategorię</span>
+          <span>Dodaj kategorię</span>
         </button>
       </div>
 
       <nav className="flex-1 py-4">
-        <div className="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-          Kategorie
+        <div className="px-6 mb-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+          Struktura Projektu
         </div>
-        <ul className="space-y-1">
+        
+        {categories.length === 0 && (
+          <div className="px-6 py-4 text-xs text-slate-600 italic">
+            Brak kategorii. Dodaj pierwszą, aby zacząć.
+          </div>
+        )}
+
+        <ul className="space-y-4">
           {categories.map((cat) => (
-            <li key={cat.id}>
-              <button className="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors group">
-                <div className="flex items-center gap-3">
-                  <Folder size={18} className="text-indigo-400" />
-                  <span className="text-sm font-medium">{cat.name}</span>
+            <li key={cat.id} className="group">
+              <div className="flex items-center justify-between px-6 py-2 text-slate-400 group-hover:text-slate-200 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Folder size={16} className="text-indigo-500" />
+                  <span className="text-xs font-black uppercase tracking-wider">{cat.name}</span>
                 </div>
-                <ChevronRight size={14} className="text-slate-600 group-hover:text-slate-400" />
-              </button>
+                <button 
+                  onClick={(e) => handleAddTech(cat.id, e)}
+                  className="p-1 hover:bg-slate-800 rounded text-slate-500 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+              
+              <ul className="mt-1 space-y-0.5">
+                {cat.technologies.map((tech) => (
+                  <li key={tech.id}>
+                    <button 
+                      onClick={() => setSelection(cat.id, tech.id)}
+                      className={`w-full flex items-center gap-3 pl-10 pr-6 py-2 text-sm transition-all border-r-2 ${
+                        selectedTechnologyId === tech.id 
+                        ? 'bg-indigo-500/10 text-white border-indigo-500 font-bold' 
+                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border-transparent'
+                      }`}
+                    >
+                      <FileText size={16} className={selectedTechnologyId === tech.id ? 'text-indigo-400' : 'text-slate-600'} />
+                      <span className="truncate">{tech.name}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </li>
           ))}
         </ul>
       </nav>
 
-      <div className="p-4 bg-slate-950/50 mt-auto">
-        <div className="flex items-center gap-3 px-2 py-2 rounded-md bg-slate-800/50 border border-slate-700/50">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">
-            TM
+      <div className="p-4 bg-slate-950/50 mt-auto border-t border-slate-800">
+        <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-900 border border-slate-800">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-inner">
+            TC
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-white">TERMO-CAD</span>
-            <span className="text-[10px] text-slate-500">Kalkulator XML</span>
+            <span className="text-xs font-bold text-white tracking-tight">TERMO-CAD</span>
+            <span className="text-[10px] text-slate-500 font-medium">Kalkulator XML</span>
           </div>
         </div>
       </div>
