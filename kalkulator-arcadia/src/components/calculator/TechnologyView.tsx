@@ -1,7 +1,6 @@
-import React from 'react';
+import { Calculator, Edit3, ChevronRight, FileText } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import type { Technology, Variant, TechnologyMaterial } from '../../store/useAppStore';
-import { Calculator, Edit3, ChevronRight, FileText, Info } from 'lucide-react';
+import type { Variant, TechnologyMaterial } from '../../store/useAppStore';
 import PartitionCalculator from './PartitionCalculator';
 import JoineryCalculator from './JoineryCalculator';
 import PVCalculator from './PVCalculator';

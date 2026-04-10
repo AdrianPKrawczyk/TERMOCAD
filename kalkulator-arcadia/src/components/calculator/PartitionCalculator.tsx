@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Calculator, AlertCircle, Settings2 } from 'lucide-react';
+import { Play, AlertCircle, Settings2 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { Variant, TechnologyMaterial } from '../../store/useAppStore';
 import MaterialTable from './MaterialTable';

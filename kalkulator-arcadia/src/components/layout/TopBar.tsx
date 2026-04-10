@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
-import { Settings, Save, FileOutput } from 'lucide-react';
+import { Settings, Save, FileCode } from 'lucide-react';
 import GlobalSettingsModal from '../settings/GlobalSettingsModal';
+import { useAppStore } from '../../store/useAppStore';
+import { generateXML, downloadXML } from '../../utils/xmlExporter';
 
 const TopBar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { categories } = useAppStore();
+
+  const handleExportXML = () => {
+    const xml = generateXML(categories);
+    const date = new Date().toISOString().split('T')[0];
+    downloadXML(xml, `cennik_arcadia_${date}.xml`);
+  };
 
   return (
     <>
@@ -27,8 +36,11 @@ const TopBar: React.FC = () => {
             <span>Zapisz Projekt</span>
           </button>
           
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all transform active:scale-95">
-            <FileOutput size={18} />
+          <button 
+            onClick={handleExportXML}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg shadow-indigo-200 transition-all transform active:scale-95 text-sm"
+          >
+            <FileCode size={18} />
             <span>Eksportuj do XML</span>
           </button>
         </div>

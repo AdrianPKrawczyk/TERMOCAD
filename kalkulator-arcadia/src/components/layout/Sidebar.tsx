@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  LayoutGrid, 
   Plus, 
   ChevronDown, 
   ChevronUp, 
@@ -10,7 +9,8 @@ import {
   X,
   Home,
   Square,
-  Sun
+  Sun,
+  Trash2
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { CategoryType } from '../../store/useAppStore';
@@ -24,6 +24,8 @@ const Sidebar: React.FC = () => {
     renameTechnology,
     reorderCategory,
     reorderTechnology,
+    removeCategory,
+    removeTechnology,
     selectedTechnologyId, 
     setSelection 
   } = useAppStore();
@@ -59,6 +61,20 @@ const Sidebar: React.FC = () => {
       renameTechnology(catId, id, editValue);
     }
     setEditingId(null);
+  };
+
+  const handleRemoveCategory = (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`Wykasowanie kategorii "${name}" nieodwracalnie usunie wszystkie zawarte w niej technologie.\nCzy kontynuować?`)) {
+      removeCategory(id);
+    }
+  };
+
+  const handleRemoveTechnology = (catId: string, techId: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`Czy na pewno chcesz usunąć technologię "${name}"?`)) {
+      removeTechnology(catId, techId);
+    }
   };
 
   const handleCreateTech = (catId: string) => {
@@ -161,7 +177,8 @@ const Sidebar: React.FC = () => {
                   {editingId !== cat.id && (
                     <button onClick={(e) => startEditing(cat.id, cat.name, e)} className="p-1 hover:text-indigo-400"><Pencil size={12}/></button>
                   )}
-                  <button onClick={(e) => { e.stopPropagation(); setAddingTechTo(cat.id); setNewTechValue(''); }} className="p-1 hover:text-white bg-slate-800 rounded"><Plus size={12}/></button>
+                  <button onClick={(e) => handleRemoveCategory(cat.id, cat.name, e)} className="p-1 hover:text-red-400 text-slate-500"><Trash2 size={12}/></button>
+                  <button onClick={(e) => { e.stopPropagation(); setAddingTechTo(cat.id); setNewTechValue(''); }} className="p-1 hover:text-white bg-slate-800 rounded ml-1"><Plus size={12}/></button>
                 </div>
               </div>
               
@@ -212,12 +229,20 @@ const Sidebar: React.FC = () => {
                             </div>
 
                           {editingId !== tech.id && (
-                            <button 
-                              onClick={(e) => startEditing(tech.id, tech.name, e)}
-                              className="p-1 text-slate-500 hover:text-indigo-300"
-                            >
-                              <Pencil size={12}/>
-                            </button>
+                            <>
+                              <button 
+                                onClick={(e) => startEditing(tech.id, tech.name, e)}
+                                className="p-1 text-slate-500 hover:text-indigo-300"
+                              >
+                                <Pencil size={12}/>
+                              </button>
+                              <button 
+                                onClick={(e) => handleRemoveTechnology(cat.id, tech.id, tech.name, e)}
+                                className="p-1 text-slate-500 hover:text-red-400"
+                              >
+                                <Trash2 size={12}/>
+                              </button>
+                            </>
                           )}
                         </div>
                       </button>
