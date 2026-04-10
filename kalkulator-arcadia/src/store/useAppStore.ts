@@ -91,6 +91,10 @@ interface AppState {
   updateTechnologyNotes: (categoryId: string, techId: string, notes: string) => void;
   removeTechnology: (categoryId: string, techId: string) => void;
   updateVariants: (categoryId: string, techId: string, variants: Variant[]) => void;
+  
+  // Akcje - Import Projektu/Zmiennych
+  loadProjectSnapshot: (snapshot: { globalSettings: GlobalSettings; categories: Category[] }) => void;
+  mergeBaseMaterials: (materialsMap: Record<string, number>) => void;
 }
 
 // --- Initial State ---
@@ -120,6 +124,14 @@ export const useAppStore = create<AppState>()(
       setSelection: (categoryId, technologyId) =>
         set({ selectedCategoryId: categoryId, selectedTechnologyId: technologyId }),
 
+      loadProjectSnapshot: (snapshot) =>
+        set({
+          globalSettings: snapshot.globalSettings,
+          categories: snapshot.categories,
+          selectedCategoryId: null,
+          selectedTechnologyId: null,
+        }),
+
       updateGlobalSettings: (settings) => 
         set({ globalSettings: settings }),
 
@@ -130,6 +142,17 @@ export const useAppStore = create<AppState>()(
             baseMaterials: {
               ...state.globalSettings.baseMaterials,
               [name]: price,
+            },
+          },
+        })),
+
+      mergeBaseMaterials: (materialsMap) =>
+        set((state) => ({
+          globalSettings: {
+            ...state.globalSettings,
+            baseMaterials: {
+              ...state.globalSettings.baseMaterials,
+              ...materialsMap,
             },
           },
         })),

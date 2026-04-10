@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Modal from '../common/Modal';
 import { useAppStore } from '../../store/useAppStore';
-import { Plus, Trash2, Save, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Save, AlertCircle, Upload, Download } from 'lucide-react';
+import { downloadMaterialsJSON } from '../../utils/jsonExporter';
 
 interface GlobalSettingsModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface GlobalSettingsModalProps {
 
 const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClose }) => {
   const { globalSettings, updateGlobalSettings } = useAppStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Lokalny stan formularza
   const [hourlyRate, setHourlyRate] = useState(globalSettings.hourlyRate);
@@ -60,6 +62,48 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClo
     onClose();
   };
 
+  const handleExportMaterials = () => {
+    const baseMaterials: Record<string, number> = {};
+    materials.forEach((m) => {
+      if (m.name.trim()) baseMaterials[m.name.trim()] = m.price;
+    });
+    downloadMaterialsJSON(baseMaterials);
+  };
+
+  const handleImportMaterialsClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const data = JSON.parse(content);
+        if (data.type === 'ARCADIA_MATERIALS_BACKUP' && data.baseMaterials) {
+            // Zbudowanie starej bazy
+            const currentMap: Record<string, number> = {};
+            materials.forEach((m) => { if (m.name.trim()) currentMap[m.name.trim()] = m.price; });
+            
+            // Łączenie z nadpisaniem w razie konfliktu:
+            const newMap = { ...currentMap, ...data.baseMaterials };
+            
+            const newMaterialsArray = Object.entries(newMap).map(([name, price]) => ({ name, price: Number(price) }));
+            setMaterials(newMaterialsArray);
+            alert('Baza materiałowa pomyślnie złączona. Zapisz zmiany formularza, by użyć w projekcie.');
+        } else {
+          alert('Nieprawidłowy plik bazy materiałowej.');
+        }
+      } catch (err) {
+        alert('Błąd odczytu pliku JSON.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Zmienne Globalne">
       <div className="space-y-8">
@@ -89,13 +133,39 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClo
               <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
               Baza Materiałowa
             </h4>
-            <button 
-              onClick={handleAddMaterial}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-indigo-100"
-            >
-              <Plus size={14} />
-              Dodaj materiał
-            </button>
+            
+            <div className="flex items-center gap-2">
+              <input 
+                type="file" 
+                accept=".json" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+              />
+              <button 
+                onClick={handleImportMaterialsClick}
+                className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
+                title="Wczytaj i połącz z pliku .json"
+              >
+                <Upload size={14} />
+                Import
+              </button>
+              <button 
+                onClick={handleExportMaterials}
+                className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
+                title="Zapisz bazę do pliku .json"
+              >
+                <Download size={14} />
+                Eksport
+              </button>
+              <button 
+                onClick={handleAddMaterial}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-indigo-100 ml-2"
+              >
+                <Plus size={14} />
+                Dodaj materiał
+              </button>
+            </div>
           </div>
 
           <div className="space-y-3">
