@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 
 // --- Interfejsy ---
 
+export type CategoryType = 'PARTITIONS' | 'JOINERY' | 'INSTALLATIONS';
+
 export interface GlobalSettings {
   hourlyRate: number; // np. 45 zł/h
   baseMaterials: Record<string, number>; // np. { "EPS_036": 245, "Klej": 42.5 }
@@ -10,32 +12,58 @@ export interface GlobalSettings {
 
 export interface Variant {
   id: string;
-  thickness?: number; // np. 15 (cm)
-  name: string; // np. "Fasada 0,036 - 15cm"
-  unit: string; // np. "zł/m2"
-  totalCost: number; // Wyliczona cena
+  thickness?: number; // dla przegród (cm)
+  uValue?: number; // dla okien
+  efficiency?: number; // dla PV (%)
+  name: string;
+  unit: string;
+  totalCost: number;
+}
+
+export interface TechnologyMaterial {
+  materialId: string;
+  usage: number;
+  isBase: boolean;
 }
 
 export interface Technology {
   id: string;
   name: string;
   calculationType: 'AUTO' | 'MANUAL';
+  notes: string;
+  
+  // Konfiguracja dla Przegród (PARTITIONS)
+  materials: TechnologyMaterial[];
   thicknessStart?: number;
   thicknessEnd?: number;
   thicknessStep?: number;
-  formulaConfig?: {
-    materialBaseId: string; // Referencja do klucza w baseMaterials
-    fixedCost: number; // np. tynk, siatka
-    laborCostPattern: 'fixed' | 'linear';
-  };
+  fixedCost?: number;
+  laborCost?: number;
+
+  // Konfiguracja dla Okien (JOINERY)
+  uStart?: number;
+  uEnd?: number;
+  uStep?: number;
+  uBasePrice?: number;
+  uStepExtra?: number;
+
+  // Konfiguracja dla PV (INSTALLATIONS)
+  effStart?: number;
+  effEnd?: number;
+  effStep?: number;
+  effBasePrice?: number;
+  effStepExtra?: number;
+
   variants: Variant[];
 }
 
 export interface Category {
   id: string;
   name: string;
+  type: CategoryType;
   technologies: Technology[];
 }
+
 interface AppState {
   globalSettings: GlobalSettings;
   categories: Category[];
@@ -49,12 +77,15 @@ interface AppState {
   updateGlobalSettings: (settings: GlobalSettings) => void;
   
   // Akcje - Kategorie
-  addCategory: (name: string) => void;
+  addCategory: (name: string, type: CategoryType) => void;
+  renameCategory: (id: string, newName: string) => void;
   removeCategory: (id: string) => void;
   
   // Akcje - Technologie
   addTechnology: (categoryId: string, name: string) => void;
+  renameTechnology: (categoryId: string, techId: string, newName: string) => void;
   updateTechnology: (categoryId: string, techId: string, updates: Partial<Technology>) => void;
+  updateTechnologyNotes: (categoryId: string, techId: string, notes: string) => void;
   removeTechnology: (categoryId: string, techId: string) => void;
   updateVariants: (categoryId: string, techId: string, variants: Variant[]) => void;
 }
@@ -68,6 +99,8 @@ const defaultGlobalSettings: GlobalSettings = {
     'Klej do styropianu (kg)': 1.8,
     'Siatka zbrojąca (m2)': 4.5,
     'Tynk silikonowy (kg)': 12.0,
+    'Okno PVC (szt)': 800,
+    'Panel PV 400W (szt)': 600,
   },
 };
 
@@ -87,17 +120,24 @@ export const useAppStore = create<AppState>()(
       updateGlobalSettings: (settings) => 
         set({ globalSettings: settings }),
 
-      addCategory: (name) =>
+      addCategory: (name, type) =>
         set((state) => ({
           categories: [
             ...state.categories,
-            { id: crypto.randomUUID(), name, technologies: [] },
+            { id: crypto.randomUUID(), name, type, technologies: [] },
           ],
+        })),
+
+      renameCategory: (id, newName) =>
+        set((state) => ({
+          categories: state.categories.map(c => c.id === id ? { ...c, name: newName } : c)
         })),
 
       removeCategory: (id) =>
         set((state) => ({
           categories: state.categories.filter((c) => c.id !== id),
+          selectedCategoryId: state.selectedCategoryId === id ? null : state.selectedCategoryId,
+          selectedTechnologyId: state.selectedCategoryId === id ? null : state.selectedTechnologyId,
         })),
 
       addTechnology: (categoryId, name) =>
@@ -111,13 +151,24 @@ export const useAppStore = create<AppState>()(
                     {
                       id: crypto.randomUUID(),
                       name,
+                      notes: '',
                       calculationType: 'MANUAL',
+                      materials: [],
                       variants: [],
                     },
                   ],
                 }
               : cat
           ),
+        })),
+
+      renameTechnology: (categoryId, techId, newName) =>
+        set((state) => ({
+          categories: state.categories.map(cat => 
+            cat.id === categoryId 
+              ? { ...cat, technologies: cat.technologies.map(t => t.id === techId ? { ...t, name: newName } : t) }
+              : cat
+          )
         })),
 
       updateTechnology: (categoryId, techId, updates) =>
@@ -134,6 +185,15 @@ export const useAppStore = create<AppState>()(
           ),
         })),
 
+      updateTechnologyNotes: (categoryId, techId, notes) =>
+        set((state) => ({
+          categories: state.categories.map((cat) =>
+            cat.id === categoryId
+              ? { ...cat, technologies: cat.technologies.map(t => t.id === techId ? { ...t, notes } : t) }
+              : cat
+          )
+        })),
+
       removeTechnology: (categoryId, techId) =>
         set((state) => ({
           categories: state.categories.map((cat) =>
@@ -144,7 +204,6 @@ export const useAppStore = create<AppState>()(
                 }
               : cat
           ),
-          // Jeśli usuwana technologia była zaznaczona, czyścimy wybór
           selectedTechnologyId: state.selectedTechnologyId === techId ? null : state.selectedTechnologyId,
         })),
 
@@ -163,7 +222,7 @@ export const useAppStore = create<AppState>()(
         })),
     }),
     {
-      name: 'kalkulator-arcadia-storage', // klucz w localStorage
+      name: 'kalkulator-arcadia-storage-v4', // Zmiana klucza wymusza reset stanu dla v0.4.0
     }
   )
 );

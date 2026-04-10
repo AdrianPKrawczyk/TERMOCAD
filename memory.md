@@ -5,29 +5,33 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
 
 ## 💻 Stos Technologiczny
 - React 18 (przez Vite)
-- TypeScript (ścisłe typowanie to priorytet)
+- TypeScript (ścisłe typowanie)
 - Tailwind CSS 4 (stylowanie UI)
-- Zustand (zarządzanie stanem globalnym i drzewem kategorii)
+- Zustand (zarządzanie stanem globalnym)
 - Lucide React (ikony)
-- Wbudowany DOMParser / XMLSerializer (do generowania plików wyjściowych)
+- Wbudowany DOMParser / XMLSerializer (do generowania XML)
 
 ## ✅ Ostatnio wykonane zadania
 - [x] Utworzenie repozytorium/katalogu projektu.
-- [x] Instalacja bazowych zależności (Vite, React, Tailwind CSS 4, Zustand, Lucide React).
-- [x] Utworzenie pliku `memory.md`.
-- [x] Opracowanie Architektury Danych i wymagań dla XML.
-- [x] **Krok 1: Szkielet UI (Layout)** - Zbudowanie bazowego układu z użyciem Tailwind CSS.
-- [x] **Krok 2: Stan Globalny (Zustand)** - Implementacja store `useAppStore.ts` z obsługą `persist`.
-- [x] **Krok 3: Ustawienia Globalne** - Zbudowanie modala do edycji stawek robocizny i bazy materiałowej.
-- [x] **Krok 4: Kalkulator Wariantów (Tryb AUTO i MANUAL)** - Implementacja widoku technologii, logiki generowania wariantów wg wzoru oraz ręcznej edycji tabeli.
+- [x] Instalacja bazowych zależności.
+- [x] **Krok 1-3**: UI Layout, Zustand Store, Globalne Ustawienia (materiały).
+- [x] **Krok 4 (v0.4.0): Wielomateriałowość i Nowe Typy Kalkulatorów**:
+    - [x] Przebudowa store'a o obsługę typów: Przegrody, Okna/Drzwi, PV.
+    - [x] Implementacja wielomateriałowej tabeli dla przegród (materiał BAZOWY vs stałe zużycie).
+    - [x] Dodanie kalkulatora okien (współczynnik U) i PV (sprawność) z automatycznymi wzorami dopłat.
+    - [x] Implementacja zmiany nazw kategorii i technologii bezpośrednio w Sidebarze.
+    - [x] Dodanie pola "Uwagi" do każdej technologii.
+    - [x] Reset stanu aplikacji (klucz v4) w celu zachowania spójności z nowym modelem danych.
 
 ## 📝 Zadania do zrobienia (Backlog)
-- [ ] **Krok 5: Eksport XML** - Napisanie skryptu iterującego po stanie Zustand, budującego string XML wg precyzyjnej struktury (element `$Dummy`, odpowiednie tagi `Path`, `UnitCost`) i pozwalającego pobrać plik na dysk.
-- [ ] **Krok 6: Persistence & JSON Export** - Dodanie przycisku "Zapisz Projekt (JSON)" do Top Baru, pozwalającego na pobranie całego stanu aplikacji jako plik .json (obok localStorage).
+- [ ] **Krok 5: Eksport XML** - Implementacja generatora XML. Musi uwzględniać ścieżki (Path) budowane z nowych kategorii i technologii.
+- [ ] **Krok 6: Persistence & JSON Export** - Eksport/import całego projektu do pliku .json.
 
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.3.0**
-- Cena w XML (tag `<f n="UnitCost">`) musi używać **kropki** jako separatora dziesiętnego.
-- Każdy dodawany element `JobBrand` musi mieć po kolei rosnący indeks `n` (od zera).
-- Ścieżka (tag `<s n="Path">`) buduje foldery w ArCADii, np. `Ściany zewnętrzne/Styropian EPS 80`.
-- Wzór kalkulatora: `Koszt = (grubość_cm / 100) * cena_bazowa_m3 + koszty_stałe + robocizna`.
+- Aktualna wersja programu: **0.4.0**
+- Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
+- Wzory cenowe:
+    - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.
+    - **Okna**: `price = base + ((U_start - U_current) / step) * extra`.
+    - **PV**: `price = base + ((Eff_current - Eff_start) / step) * extra`.
+- Struktura XML musi być płaska w `JobBrand`, ale ścieżka `Path` decyduje o strukturze folderów w ArCADia.
