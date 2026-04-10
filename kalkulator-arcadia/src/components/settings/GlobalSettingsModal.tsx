@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
-import { useAppStore, GlobalSettings } from '../../store/useAppStore';
+import { useAppStore } from '../../store/useAppStore';
 import { Plus, Trash2, Save, AlertCircle } from 'lucide-react';
 
 interface GlobalSettingsModalProps {
