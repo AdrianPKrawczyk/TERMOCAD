@@ -1,0 +1,35 @@
+# Logs (Logi błędów npm/yarn)
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies (Pobrane biblioteki - to najważniejszy punkt!)
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files (Pliki konfiguracyjne edytorów, np. VSC)
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Env files (Pliki ze zmiennymi środowiskowymi, np. hasła/klucze)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# TypeScript cache
+*.tsbuildinfo
