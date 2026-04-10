@@ -1,4 +1,5 @@
 import type { Category } from '../store/useAppStore';
+import JSZip from 'jszip';
 
 /**
  * Generuje plik XML kompatybilny z ArCADia-TERMO na podstawie stanu kategorii.
@@ -68,6 +69,24 @@ function escapeXml(unsafe: string): string {
 export const downloadXML = (xmlString: string, filename: string = 'cennik_arcadia.xml') => {
   const blob = new Blob([xmlString], { type: 'application/xml' });
   const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * Wyzwala pobieranie pliku .xlibrary (spakowany data.xml jako zip)
+ */
+export const downloadXLibrary = async (xmlString: string, filename: string = 'cennik_arcadia.xlibrary') => {
+  const zip = new JSZip();
+  zip.file('data.xml', xmlString);
+  
+  const content = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(content);
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
