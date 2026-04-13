@@ -5,3 +5,19 @@
     @apply bg-slate-50 text-slate-900;
   }
 }
+
+/* Style Markdown Content */
+.markdown-content {
+  @apply text-slate-600 leading-relaxed;
+}
+
+.markdown-content h1 { @apply text-2xl font-black text-slate-800 mb-4 mt-6; }
+.markdown-content h2 { @apply text-xl font-bold text-slate-800 mb-3 mt-5; }
+.markdown-content h3 { @apply text-lg font-bold text-slate-800 mb-2 mt-4; }
+.markdown-content p { @apply mb-4; }
+.markdown-content ul { @apply list-disc pl-6 mb-4 space-y-1; }
+.markdown-content ol { @apply list-decimal pl-6 mb-4 space-y-1; }
+.markdown-content blockquote { @apply border-l-4 border-indigo-200 pl-4 italic text-slate-500 my-4; }
+.markdown-content code { @apply bg-slate-100 text-indigo-600 px-1.5 py-0.5 rounded text-sm font-mono; }
+.markdown-content strong { @apply font-black text-slate-800; }
+.markdown-content a { @apply text-indigo-600 underline hover:text-indigo-700; }

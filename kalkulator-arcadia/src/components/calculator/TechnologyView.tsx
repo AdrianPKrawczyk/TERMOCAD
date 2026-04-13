@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calculator, Edit3, ChevronRight, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calculator, Edit3, ChevronRight, FileText, ChevronDown, ChevronUp, Eye } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { useAppStore } from '../../store/useAppStore';
 import type { Variant, TechnologyMaterial } from '../../store/useAppStore';
 import PartitionCalculator from './PartitionCalculator';
@@ -23,15 +24,25 @@ const TechnologyView: React.FC = () => {
   const technology = category?.technologies.find(t => t.id === selectedTechnologyId);
 
   const [showNotes, setShowNotes] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-przełączanie w tryb edycji jeśli notatka jest pusta
+  useEffect(() => {
+    if (technology && !technology.notes) {
+      setIsEditing(true);
+    } else {
+      setIsEditing(false);
+    }
+  }, [selectedTechnologyId]);
 
   // Auto-rozszerzanie wysokości pola tekstowego
   useEffect(() => {
-    if (textareaRef.current && showNotes) {
+    if (textareaRef.current && showNotes && isEditing) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [technology?.notes, showNotes]);
+  }, [technology?.notes, showNotes, isEditing]);
 
   if (!category || !technology) {
     return null;
@@ -113,36 +124,66 @@ const TechnologyView: React.FC = () => {
       {/* SEKCJA UWAG */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <FileText size={18} className="text-slate-400" />
-            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Uwagi i Notatki</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 mr-4 border-r border-slate-200 pr-4">
+              <FileText size={18} className="text-slate-400" />
+              <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Uwagi i Notatki</h3>
+            </div>
+
+            <div className="flex p-0.5 bg-slate-100 rounded-lg mr-2">
+              <button 
+                onClick={() => setIsEditing(true)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
+                  isEditing 
+                  ? 'bg-white text-indigo-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Edit3 size={12} />
+                Edytuj
+              </button>
+              <button 
+                onClick={() => setIsEditing(false)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
+                  !isEditing 
+                  ? 'bg-white text-indigo-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Eye size={12} />
+                Podgląd
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setShowNotes(!showNotes)}
+              className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-indigo-500 transition-colors"
+            >
+              {showNotes ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
           </div>
-          <button 
-            onClick={() => setShowNotes(!showNotes)}
-            className="flex items-center gap-2 text-xs font-bold text-indigo-500 hover:text-indigo-600 transition-colors"
-          >
-            {showNotes ? (
-              <>
-                <ChevronUp size={16} />
-                Ukryj opis
-              </>
-            ) : (
-              <>
-                <ChevronDown size={16} />
-                Pokaż opis
-              </>
-            )}
-          </button>
         </div>
         
         {showNotes && (
-          <textarea 
-            ref={textareaRef}
-            placeholder="Dodaj dodatkowe informacje o technologii, linki do materiałów producenta lub wytyczne wykonawcze..."
-            className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none resize-none overflow-hidden"
-            value={technology.notes}
-            onChange={(e) => updateTechnologyNotes(category.id, technology.id, e.target.value)}
-          />
+          <div className="mt-2">
+            {isEditing ? (
+              <textarea 
+                ref={textareaRef}
+                placeholder="Dodaj dodatkowe informacje... (możesz używać Markdown: # nagłówek, - lista, **pogrubienie**)"
+                className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none resize-none overflow-hidden font-mono"
+                value={technology.notes}
+                onChange={(e) => updateTechnologyNotes(category.id, technology.id, e.target.value)}
+              />
+            ) : (
+              <div className="markdown-content p-4 bg-slate-50 border border-slate-50 rounded-xl min-h-[100px]">
+                {technology.notes ? (
+                  <ReactMarkdown>{technology.notes}</ReactMarkdown>
+                ) : (
+                  <span className="italic text-slate-400 text-xs">Brak notatek do wyświetlenia. Kliknij "Edytuj", aby coś dopisać.</span>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
 

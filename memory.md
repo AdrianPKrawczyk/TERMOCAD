@@ -45,8 +45,13 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
     - [x] Weryfikacja wizualna.
     - [x] Aktualizacja walkthrough.md.
 
+- [x] **Zadania Wykonane (v0.5.4)**:
+    - [x] Pełna obsługa składni Markdown w sekcji notatek (`react-markdown`).
+    - [x] Dodanie przełącznika "Edytuj / Podgląd" dla notatek.
+    - [x] Automatyczne formatowanie (nagłówki, listy, bold, linki) w trybie podglądu.
+
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.5.3**
+- Aktualna wersja programu: **0.5.4**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.

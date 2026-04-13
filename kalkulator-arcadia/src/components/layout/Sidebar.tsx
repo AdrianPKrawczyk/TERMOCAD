@@ -283,7 +283,7 @@ const Sidebar: React.FC = () => {
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-xs font-bold text-slate-200 truncate tracking-tight">TERMO-CAD</h4>
-            <p className="text-[10px] text-slate-500 truncate">Calculator 0.5.2</p>
+            <p className="text-[10px] text-slate-500 truncate">Calculator 0.5.4</p>
           </div>
           <button className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-md transition-colors">
             <Settings size={14} />
