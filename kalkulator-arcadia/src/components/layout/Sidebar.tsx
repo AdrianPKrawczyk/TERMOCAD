@@ -94,7 +94,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-[calc(100vh-64px)] overflow-y-auto shrink-0 border-r border-slate-800">
+    <aside className="w-[500px] bg-slate-900 text-slate-300 flex flex-col h-[calc(100vh-64px)] overflow-y-auto shrink-0 border-r border-slate-800">
       <div className="p-4 border-b border-slate-800 space-y-2">
         {!isAddingCategory ? (
           <button 
@@ -151,7 +151,7 @@ const Sidebar: React.FC = () => {
                       onKeyDown={(e) => e.key === 'Enter' && saveRename(cat.id, 'cat')}
                     />
                   ) : (
-                    <span className="text-xs font-black uppercase tracking-wider truncate">{cat.name}</span>
+                    <span className="text-xs font-black uppercase tracking-wider">{cat.name}</span>
                   )}
                 </div>
                 
@@ -206,7 +206,7 @@ const Sidebar: React.FC = () => {
                             onClick={(e) => e.stopPropagation()}
                           />
                         ) : (
-                          <span className="truncate flex-1 text-left">{tech.name}</span>
+                          <span className="flex-1 text-left">{tech.name}</span>
                         )}
                         
                         {/* Status/Action area in tech item */}
@@ -283,7 +283,7 @@ const Sidebar: React.FC = () => {
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-xs font-bold text-slate-200 truncate tracking-tight">TERMO-CAD</h4>
-            <p className="text-[10px] text-slate-500 truncate">Calculator 0.4.0</p>
+            <p className="text-[10px] text-slate-500 truncate">Calculator 0.5.2</p>
           </div>
           <button className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-md transition-colors">
             <Settings size={14} />

@@ -7,8 +7,8 @@ const MainContent: React.FC = () => {
   const { selectedTechnologyId } = useAppStore();
 
   return (
-    <main className="flex-1 overflow-y-auto bg-slate-50 p-8">
-      <div className="max-w-[1400px] mx-auto">
+    <main className="flex-1 overflow-y-auto bg-slate-50 p-2">
+      <div className="max-w-[1600px] mx-auto">
         {selectedTechnologyId ? (
           <TechnologyView />
         ) : (

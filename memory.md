@@ -30,8 +30,13 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
 ## 📝 Zadania do zrobienia (Backlog)
 - [ ] Opcjonalne optymalizacje, testy brzegowe i poprawki UX w miarę testowania przez audytorów.
 
+- [x] **Zadania Wykonane (v0.5.2)**:
+    - [x] Powiększenie szerokości Sidebaru do 500px (lepsza czytelność długich nazw).
+    - [x] Usunięcie ucinania tekstu (truncate) w nazwach kategorii i technologii.
+    - [x] Zmniejszenie marginesów zewnętrznych (padding p-2) i poszerzenie max-width do 1600px.
+
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.5.1**
+- Aktualna wersja programu: **0.5.2**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.
