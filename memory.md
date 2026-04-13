@@ -50,8 +50,11 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
     - [x] Dodanie przełącznika "Edytuj / Podgląd" dla notatek.
     - [x] Automatyczne formatowanie (nagłówki, listy, bold, linki) w trybie podglądu.
 
+- [x] **Zadania Wykonane (v0.5.5)**:
+    - [x] Wdrożenie modyfikatorów robocizny ("skokowa robocizna") z 2 opcjonalnymi progami granicznymi grubości.
+
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.5.4**
+- Aktualna wersja programu: **0.5.5**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.

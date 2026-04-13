@@ -23,6 +23,15 @@ const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({
   const [thicknessStep, setThicknessStep] = useState(1);
   const [fixedCost, setFixedCost] = useState(0); 
   const [laborCost, setLaborCost] = useState(50); 
+  
+  // Progi robocizny skokowej
+  const [t1Active, setT1Active] = useState(false);
+  const [t1Value, setT1Value] = useState(3);
+  const [t1Mult, setT1Mult] = useState(2.0);
+  
+  const [t2Active, setT2Active] = useState(false);
+  const [t2Value, setT2Value] = useState(6);
+  const [t2Mult, setT2Mult] = useState(3.0);
 
   const handleGenerate = () => {
     const newVariants: Variant[] = [];
@@ -49,7 +58,16 @@ const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({
       // Koszt bazowy = (grubość m) * cena m3 * zużycie (zazwyczaj 1.0)
       const materialCostBase = (t / 100) * basePrice * baseMatInfo.usage;
       
-      const totalCost = materialCostBase + otherMaterialsCost + fixedCost + laborCost;
+      let currentLaborCost = laborCost;
+      
+      // Sprawdzanie progów od największego do najmniejszego
+      if (t2Active && t > t2Value) {
+        currentLaborCost *= t2Mult;
+      } else if (t1Active && t > t1Value) {
+        currentLaborCost *= t1Mult;
+      }
+
+      const totalCost = materialCostBase + otherMaterialsCost + fixedCost + currentLaborCost;
 
       newVariants.push({
         id: crypto.randomUUID(),
@@ -128,8 +146,92 @@ const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({
                 />
               </div>
             </div>
-          </div>
 
+            {/* SEKCJA 1B: SKOKOWE PROGI ROBOCIZNY */}
+            <div className="bg-slate-100/50 rounded-2xl p-5 border border-slate-200">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+                Mnożniki skokowe robocizny (Opcjonalne)
+              </h4>
+              <div className="flex flex-col md:flex-row gap-6">
+                
+                {/* PRÓG 1 */}
+                <div className={`flex-1 flex flex-col gap-3 p-4 rounded-xl border transition-all ${t1Active ? 'bg-white border-indigo-200 shadow-sm' : 'bg-transparent border-slate-200'}`}>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={t1Active} 
+                      onChange={(e) => setT1Active(e.target.checked)}
+                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm font-bold text-slate-800">Próg 1</span>
+                  </label>
+                  
+                  {t1Active && (
+                    <div className="flex items-center gap-3 animate-in fade-in zoom-in duration-200">
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] text-slate-500 font-bold uppercase">Grubość (cm) &gt;</span>
+                        <input 
+                          type="number" 
+                          value={t1Value} 
+                          onChange={(e) => setT1Value(parseFloat(e.target.value) || 0)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold text-slate-700 outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] text-slate-500 font-bold uppercase">Mnożnik (x)</span>
+                        <input 
+                          type="number" 
+                          step="0.1"
+                          value={t1Mult} 
+                          onChange={(e) => setT1Mult(parseFloat(e.target.value) || 1)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold text-indigo-600 outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* PRÓG 2 */}
+                <div className={`flex-1 flex flex-col gap-3 p-4 rounded-xl border transition-all ${t2Active ? 'bg-white border-indigo-200 shadow-sm' : 'bg-transparent border-slate-200'}`}>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={t2Active} 
+                      onChange={(e) => setT2Active(e.target.checked)}
+                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm font-bold text-slate-800">Próg 2</span>
+                  </label>
+                  
+                  {t2Active && (
+                    <div className="flex items-center gap-3 animate-in fade-in zoom-in duration-200">
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] text-slate-500 font-bold uppercase">Grubość (cm) &gt;</span>
+                        <input 
+                          type="number" 
+                          value={t2Value} 
+                          onChange={(e) => setT2Value(parseFloat(e.target.value) || 0)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold text-slate-700 outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] text-slate-500 font-bold uppercase">Mnożnik (x)</span>
+                        <input 
+                          type="number" 
+                          step="0.1"
+                          value={t2Mult} 
+                          onChange={(e) => setT2Mult(parseFloat(e.target.value) || 1)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold text-indigo-600 outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+              </div>
+            </div>
+          </div>
+          
           <hr className="border-slate-200" />
 
           {/* SEKCJA 2: KONFIGURACJA MATERIAŁÓW (POD SPODEM) */}
