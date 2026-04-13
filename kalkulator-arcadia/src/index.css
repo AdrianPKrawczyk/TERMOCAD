@@ -21,3 +21,7 @@
 .markdown-content code { @apply bg-slate-100 text-indigo-600 px-1.5 py-0.5 rounded text-sm font-mono; }
 .markdown-content strong { @apply font-black text-slate-800; }
 .markdown-content a { @apply text-indigo-600 underline hover:text-indigo-700; }
+.markdown-content table { @apply w-full text-left border-collapse my-4 text-sm; }
+.markdown-content th { @apply bg-slate-200 text-slate-700 font-bold p-3 border border-slate-300; }
+.markdown-content td { @apply p-3 border border-slate-300 bg-white; }
+.markdown-content tbody tr:nth-child(even) td { @apply bg-slate-50; }

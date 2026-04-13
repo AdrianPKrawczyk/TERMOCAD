@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calculator, Edit3, ChevronRight, FileText, ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAppStore } from '../../store/useAppStore';
 import type { Variant, TechnologyMaterial } from '../../store/useAppStore';
 import PartitionCalculator from './PartitionCalculator';
@@ -177,7 +178,7 @@ const TechnologyView: React.FC = () => {
             ) : (
               <div className="markdown-content p-4 bg-slate-50 border border-slate-50 rounded-xl min-h-[100px]">
                 {technology.notes ? (
-                  <ReactMarkdown>{technology.notes}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{technology.notes}</ReactMarkdown>
                 ) : (
                   <span className="italic text-slate-400 text-xs">Brak notatek do wyświetlenia. Kliknij "Edytuj", aby coś dopisać.</span>
                 )}
