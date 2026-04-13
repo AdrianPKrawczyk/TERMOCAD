@@ -1,4 +1,5 @@
-import { Calculator, Edit3, ChevronRight, FileText } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Calculator, Edit3, ChevronRight, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { Variant, TechnologyMaterial } from '../../store/useAppStore';
 import PartitionCalculator from './PartitionCalculator';
@@ -20,6 +21,17 @@ const TechnologyView: React.FC = () => {
   // Znajdź wybraną technologię
   const category = categories.find(c => c.id === selectedCategoryId);
   const technology = category?.technologies.find(t => t.id === selectedTechnologyId);
+
+  const [showNotes, setShowNotes] = useState(true);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-rozszerzanie wysokości pola tekstowego
+  useEffect(() => {
+    if (textareaRef.current && showNotes) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [technology?.notes, showNotes]);
 
   if (!category || !technology) {
     return null;
@@ -100,16 +112,38 @@ const TechnologyView: React.FC = () => {
 
       {/* SEKCJA UWAG */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <FileText size={18} className="text-slate-400" />
-          <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Uwagi i Notatki</h3>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <FileText size={18} className="text-slate-400" />
+            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Uwagi i Notatki</h3>
+          </div>
+          <button 
+            onClick={() => setShowNotes(!showNotes)}
+            className="flex items-center gap-2 text-xs font-bold text-indigo-500 hover:text-indigo-600 transition-colors"
+          >
+            {showNotes ? (
+              <>
+                <ChevronUp size={16} />
+                Ukryj opis
+              </>
+            ) : (
+              <>
+                <ChevronDown size={16} />
+                Pokaż opis
+              </>
+            )}
+          </button>
         </div>
-        <textarea 
-          placeholder="Dodaj dodatkowe informacje o technologii, linki do materiałów producenta lub wytyczne wykonawcze..."
-          className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none resize-y"
-          value={technology.notes}
-          onChange={(e) => updateTechnologyNotes(category.id, technology.id, e.target.value)}
-        />
+        
+        {showNotes && (
+          <textarea 
+            ref={textareaRef}
+            placeholder="Dodaj dodatkowe informacje o technologii, linki do materiałów producenta lub wytyczne wykonawcze..."
+            className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none resize-none overflow-hidden"
+            value={technology.notes}
+            onChange={(e) => updateTechnologyNotes(category.id, technology.id, e.target.value)}
+          />
+        )}
       </div>
 
       <div className="space-y-6">

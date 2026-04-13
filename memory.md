@@ -35,8 +35,18 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
     - [x] Usunięcie ucinania tekstu (truncate) w nazwach kategorii i technologii.
     - [x] Zmniejszenie marginesów zewnętrznych (padding p-2) i poszerzenie max-width do 1600px.
 
+- [x] **Zadania Wykonane (v0.5.3)**:
+    - [x] Modyfikacja `TechnologyView.tsx`:
+    - [x] Dodanie importów `useRef`, `useEffect`, `useState`.
+    - [x] Implementacja stanu `showNotes` (domyślnie `true`).
+    - [x] Implementacja `useEffect` dla auto-rozszerzania textarea.
+    - [x] Dodanie przycisku przełączania (ChevronUp/Down) do nagłówka.
+    - [x] Dodanie warunkowego renderowania / animacji zwijania pola.
+    - [x] Weryfikacja wizualna.
+    - [x] Aktualizacja walkthrough.md.
+
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.5.2**
+- Aktualna wersja programu: **0.5.3**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.
