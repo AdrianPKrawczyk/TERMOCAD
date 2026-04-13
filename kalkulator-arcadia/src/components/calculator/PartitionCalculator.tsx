@@ -1,37 +1,73 @@
 import React, { useState } from 'react';
 import { Play, AlertCircle, Settings2 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import type { Variant, TechnologyMaterial } from '../../store/useAppStore';
+import type { Variant, TechnologyMaterial, Technology } from '../../store/useAppStore';
 import MaterialTable from './MaterialTable';
 
 interface PartitionCalculatorProps {
+  technology: Technology;
   onGenerate: (variants: Variant[]) => void;
   initialMaterials?: TechnologyMaterial[];
   onUpdateMaterials: (materials: TechnologyMaterial[]) => void;
+  onUpdateParameters: (params: Partial<Technology>) => void;
 }
 
 const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({ 
+  technology,
   onGenerate, 
   initialMaterials = [], 
-  onUpdateMaterials 
+  onUpdateMaterials,
+  onUpdateParameters
 }) => {
   const { globalSettings } = useAppStore();
   
-  // Stan formularza lokalny dla zakresu grubości
-  const [thicknessStart, setThicknessStart] = useState(5);
-  const [thicknessEnd, setThicknessEnd] = useState(30);
-  const [thicknessStep, setThicknessStep] = useState(1);
-  const [fixedCost, setFixedCost] = useState(0); 
-  const [laborCost, setLaborCost] = useState(50); 
+  // Stan formularza lokalny dla zakresu grubości (z domyślnymi wartościami)
+  const [thicknessStart, setThicknessStart] = useState(technology.thicknessStart ?? 5);
+  const [thicknessEnd, setThicknessEnd] = useState(technology.thicknessEnd ?? 30);
+  const [thicknessStep, setThicknessStep] = useState(technology.thicknessStep ?? 1);
+  const [fixedCost, setFixedCost] = useState(technology.fixedCost ?? 0); 
+  const [laborCost, setLaborCost] = useState(technology.laborCost ?? 50); 
   
   // Progi robocizny skokowej
-  const [t1Active, setT1Active] = useState(false);
-  const [t1Value, setT1Value] = useState(3);
-  const [t1Mult, setT1Mult] = useState(2.0);
+  const [t1Active, setT1Active] = useState(technology.t1Active ?? false);
+  const [t1Value, setT1Value] = useState(technology.t1Value ?? 3);
+  const [t1Mult, setT1Mult] = useState(technology.t1Mult ?? 2.0);
   
-  const [t2Active, setT2Active] = useState(false);
-  const [t2Value, setT2Value] = useState(6);
-  const [t2Mult, setT2Mult] = useState(3.0);
+  const [t2Active, setT2Active] = useState(technology.t2Active ?? false);
+  const [t2Value, setT2Value] = useState(technology.t2Value ?? 6);
+  const [t2Mult, setT2Mult] = useState(technology.t2Mult ?? 3.0);
+
+  // Synchronizacja z Zustand przy otwarciu nowej technologii
+  React.useEffect(() => {
+    setThicknessStart(technology.thicknessStart ?? 5);
+    setThicknessEnd(technology.thicknessEnd ?? 30);
+    setThicknessStep(technology.thicknessStep ?? 1);
+    setFixedCost(technology.fixedCost ?? 0);
+    setLaborCost(technology.laborCost ?? 50);
+    setT1Active(technology.t1Active ?? false);
+    setT1Value(technology.t1Value ?? 3);
+    setT1Mult(technology.t1Mult ?? 2.0);
+    setT2Active(technology.t2Active ?? false);
+    setT2Value(technology.t2Value ?? 6);
+    setT2Mult(technology.t2Mult ?? 3.0);
+  }, [technology.id]);
+
+  // Automatyczny zapis w tle do globalnego stanu przy zmianach formularza
+  React.useEffect(() => {
+    onUpdateParameters({
+      thicknessStart,
+      thicknessEnd,
+      thicknessStep,
+      fixedCost,
+      laborCost,
+      t1Active,
+      t1Value,
+      t1Mult,
+      t2Active,
+      t2Value,
+      t2Mult
+    });
+  }, [thicknessStart, thicknessEnd, thicknessStep, fixedCost, laborCost, t1Active, t1Value, t1Mult, t2Active, t2Value, t2Mult]);
 
   const handleGenerate = () => {
     const newVariants: Variant[] = [];

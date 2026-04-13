@@ -39,6 +39,12 @@ export interface Technology {
   thicknessStep?: number;
   fixedCost?: number;
   laborCost?: number;
+  t1Active?: boolean;
+  t1Value?: number;
+  t1Mult?: number;
+  t2Active?: boolean;
+  t2Value?: number;
+  t2Mult?: number;
 
   // Konfiguracja dla Okien (JOINERY)
   uStart?: number;

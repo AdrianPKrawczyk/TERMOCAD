@@ -53,8 +53,13 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
 - [x] **Zadania Wykonane (v0.5.5)**:
     - [x] Wdrożenie modyfikatorów robocizny ("skokowa robocizna") z 2 opcjonalnymi progami granicznymi grubości.
 
+- [x] **Zadania Wykonane (v0.5.6)**:
+    - [x] Wdrożenie mechanizmu *Persistent Form State* dla kalkulatora. 
+    - [x] Powiązanie `PartitionCalculator` (lokalne stany `useState`) z nadrzędnym drzewem Zustand dla danej technologii przez sprzężony `useEffect` na zmianie i inicjalizacji z góry.
+    - [x] Potwierdzenie zapisu `thicknessStart`, `t1Value`, `laborCost` itp. w eksportowanych plikach `.json`.
+
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.5.5**
+- Aktualna wersja programu: **0.5.6**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.

@@ -3,7 +3,7 @@ import { Calculator, Edit3, ChevronRight, FileText, ChevronDown, ChevronUp, Eye 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAppStore } from '../../store/useAppStore';
-import type { Variant, TechnologyMaterial } from '../../store/useAppStore';
+import type { Variant, TechnologyMaterial, Technology } from '../../store/useAppStore';
 import PartitionCalculator from './PartitionCalculator';
 import JoineryCalculator from './JoineryCalculator';
 import PVCalculator from './PVCalculator';
@@ -61,14 +61,20 @@ const TechnologyView: React.FC = () => {
     updateTechnology(category.id, technology.id, { materials });
   };
 
+  const handleUpdateParameters = (updates: Partial<Technology>) => {
+    updateTechnology(category.id, technology.id, updates);
+  };
+
   const renderAutoCalculator = () => {
     switch (category.type) {
       case 'PARTITIONS':
         return (
           <PartitionCalculator 
+            technology={technology}
             initialMaterials={technology.materials}
             onUpdateMaterials={handleUpdateMaterials}
-            onGenerate={handleUpdateVariants} 
+            onGenerate={handleUpdateVariants}
+            onUpdateParameters={handleUpdateParameters}
           />
         );
       case 'JOINERY':
