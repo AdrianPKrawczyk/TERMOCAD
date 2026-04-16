@@ -1,4 +1,17 @@
 import type { Category, GlobalSettings } from '../store/useAppStore';
+import { isElectron, saveToDisk } from '../services/storageService';
+
+/**
+ * Przygotowuje czysty obiekt danych projektu
+ */
+export const prepareProjectData = (globalSettings: GlobalSettings, categories: Category[]) => {
+  return {
+    version: '0.6.0',
+    type: 'ARCADIA_PROJECT_BACKUP',
+    globalSettings,
+    categories
+  };
+};
 
 const triggerDownload = (data: any, filename: string) => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -13,26 +26,27 @@ const triggerDownload = (data: any, filename: string) => {
 };
 
 /**
- * Zapisuje aktualny projekt jako plik JSON
+ * Zapisuje aktualny projekt (pobieranie lub Electron disk save)
  */
-export const downloadProjectJSON = (globalSettings: GlobalSettings, categories: Category[]) => {
+export const exportProjectJSON = async (globalSettings: GlobalSettings, categories: Category[], projectName: string) => {
+  const data = prepareProjectData(globalSettings, categories);
   const date = new Date().toISOString().split('T')[0];
-  const data = {
-    version: '0.5.0',
-    type: 'ARCADIA_PROJECT_BACKUP',
-    globalSettings,
-    categories
-  };
-  triggerDownload(data, `Projekt_Arcadia_${date}.json`);
+  const fileName = `${projectName}_${date}.termocad`;
+
+  if (isElectron()) {
+    await saveToDisk(data, fileName);
+  } else {
+    triggerDownload(data, fileName);
+  }
 };
 
 /**
- * Zapisuje tylko bazę materiałową jako plik JSON
+ * Zapisuje tylko bazę materiałową
  */
-export const downloadMaterialsJSON = (baseMaterials: Record<string, number>) => {
+export const exportMaterialsJSON = (baseMaterials: Record<string, number>) => {
   const date = new Date().toISOString().split('T')[0];
   const data = {
-    version: '0.5.0',
+    version: '0.6.0',
     type: 'ARCADIA_MATERIALS_BACKUP',
     baseMaterials
   };

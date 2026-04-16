@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { isElectron, saveToDisk } from '../services/storageService';
 
 // --- Interfejsy ---
 
@@ -75,6 +75,8 @@ interface AppState {
   categories: Category[];
   selectedCategoryId: string | null;
   selectedTechnologyId: string | null;
+  currentProjectName: string;
+  isDirty: boolean; // czy są niezapisane zmiany
   
   // Akcje - Nawigacja
   setSelection: (categoryId: string | null, technologyId: string | null) => void;
@@ -99,8 +101,12 @@ interface AppState {
   updateVariants: (categoryId: string, techId: string, variants: Variant[]) => void;
   
   // Akcje - Import Projektu/Zmiennych
-  loadProjectSnapshot: (snapshot: { globalSettings: GlobalSettings; categories: Category[] }) => void;
+  loadProjectSnapshot: (snapshot: { globalSettings: GlobalSettings; categories: Category[] }, fileName?: string) => void;
   mergeBaseMaterials: (materialsMap: Record<string, number>) => void;
+  
+  // Akcje - Electron/System
+  syncWithDisk: () => Promise<void>;
+  setProjectName: (name: string) => void;
 }
 
 // --- Initial State ---
@@ -119,179 +125,221 @@ const defaultGlobalSettings: GlobalSettings = {
 
 // --- Store ---
 
-export const useAppStore = create<AppState>()(
-  persist(
-    (set) => ({
-      globalSettings: defaultGlobalSettings,
-      categories: [],
+export const useAppStore = create<AppState>()((set, get) => ({
+  globalSettings: defaultGlobalSettings,
+  categories: [],
+  selectedCategoryId: null,
+  selectedTechnologyId: null,
+  currentProjectName: 'Nowy Projekt',
+  isDirty: false,
+
+  setSelection: (categoryId, technologyId) =>
+    set({ selectedCategoryId: categoryId, selectedTechnologyId: technologyId }),
+
+  loadProjectSnapshot: (snapshot, fileName) =>
+    set({
+      globalSettings: snapshot.globalSettings,
+      categories: snapshot.categories,
       selectedCategoryId: null,
       selectedTechnologyId: null,
-
-      setSelection: (categoryId, technologyId) =>
-        set({ selectedCategoryId: categoryId, selectedTechnologyId: technologyId }),
-
-      loadProjectSnapshot: (snapshot) =>
-        set({
-          globalSettings: snapshot.globalSettings,
-          categories: snapshot.categories,
-          selectedCategoryId: null,
-          selectedTechnologyId: null,
-        }),
-
-      updateGlobalSettings: (settings) => 
-        set({ globalSettings: settings }),
-
-      addBaseMaterial: (name, price) =>
-        set((state) => ({
-          globalSettings: {
-            ...state.globalSettings,
-            baseMaterials: {
-              ...state.globalSettings.baseMaterials,
-              [name]: price,
-            },
-          },
-        })),
-
-      mergeBaseMaterials: (materialsMap) =>
-        set((state) => ({
-          globalSettings: {
-            ...state.globalSettings,
-            baseMaterials: {
-              ...state.globalSettings.baseMaterials,
-              ...materialsMap,
-            },
-          },
-        })),
-
-      addCategory: (name, type) =>
-        set((state) => ({
-          categories: [
-            ...state.categories,
-            { id: crypto.randomUUID(), name, type, technologies: [] },
-          ],
-        })),
-
-      renameCategory: (id, newName) =>
-        set((state) => ({
-          categories: state.categories.map(c => c.id === id ? { ...c, name: newName } : c)
-        })),
-
-      reorderCategory: (index, direction) =>
-        set((state) => {
-          const newCategories = [...state.categories];
-          const targetIndex = index + direction;
-          if (targetIndex < 0 || targetIndex >= newCategories.length) return state;
-          [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
-          return { categories: newCategories };
-        }),
-
-      removeCategory: (id) =>
-        set((state) => ({
-          categories: state.categories.filter((c) => c.id !== id),
-          selectedCategoryId: state.selectedCategoryId === id ? null : state.selectedCategoryId,
-          selectedTechnologyId: state.selectedCategoryId === id ? null : state.selectedTechnologyId,
-        })),
-
-      addTechnology: (categoryId, name) =>
-        set((state) => ({
-          categories: state.categories.map((cat) =>
-            cat.id === categoryId
-              ? {
-                  ...cat,
-                  technologies: [
-                    ...cat.technologies,
-                    {
-                      id: crypto.randomUUID(),
-                      name,
-                      notes: '',
-                      calculationType: 'MANUAL',
-                      materials: [],
-                      variants: [],
-                    },
-                  ],
-                }
-              : cat
-          ),
-        })),
-
-      renameTechnology: (categoryId, id, newName) =>
-        set((state) => ({
-          categories: state.categories.map((cat) =>
-            cat.id === categoryId
-              ? {
-                  ...cat,
-                  technologies: cat.technologies.map((t) =>
-                    t.id === id ? { ...t, name: newName } : t
-                  ),
-                }
-              : cat
-          ),
-        })),
-
-      reorderTechnology: (categoryId, index, direction) =>
-        set((state) => ({
-          categories: state.categories.map((cat) => {
-            if (cat.id !== categoryId) return cat;
-            const newTechs = [...cat.technologies];
-            const targetIndex = index + direction;
-            if (targetIndex < 0 || targetIndex >= newTechs.length) return cat;
-            [newTechs[index], newTechs[targetIndex]] = [newTechs[targetIndex], newTechs[index]];
-            return { ...cat, technologies: newTechs };
-          }),
-        })),
-
-      updateTechnology: (categoryId, techId, updates) =>
-        set((state) => ({
-          categories: state.categories.map((cat) =>
-            cat.id === categoryId
-              ? {
-                  ...cat,
-                  technologies: cat.technologies.map((tech) =>
-                    tech.id === techId ? { ...tech, ...updates } : tech
-                  ),
-                }
-              : cat
-          ),
-        })),
-
-      updateTechnologyNotes: (categoryId, techId, notes) =>
-        set((state) => ({
-          categories: state.categories.map((cat) =>
-            cat.id === categoryId
-              ? { ...cat, technologies: cat.technologies.map(t => t.id === techId ? { ...t, notes } : t) }
-              : cat
-          )
-        })),
-
-      removeTechnology: (categoryId, techId) =>
-        set((state) => ({
-          categories: state.categories.map((cat) =>
-            cat.id === categoryId
-              ? {
-                  ...cat,
-                  technologies: cat.technologies.filter((tech) => tech.id !== techId),
-                }
-              : cat
-          ),
-          selectedTechnologyId: state.selectedTechnologyId === techId ? null : state.selectedTechnologyId,
-        })),
-
-      updateVariants: (categoryId, techId, variants) =>
-        set((state) => ({
-          categories: state.categories.map((cat) =>
-            cat.id === categoryId
-              ? {
-                  ...cat,
-                  technologies: cat.technologies.map((tech) =>
-                    tech.id === techId ? { ...tech, variants } : tech
-                  ),
-                }
-              : cat
-          ),
-        })),
+      currentProjectName: fileName || get().currentProjectName,
+      isDirty: false,
     }),
-    {
-      name: 'kalkulator-arcadia-storage-v4', // Zmiana klucza wymusza reset stanu dla v0.4.0
+
+  updateGlobalSettings: (settings) => 
+    set({ globalSettings: settings, isDirty: true }),
+
+  addBaseMaterial: (name, price) =>
+    set((state) => ({
+      isDirty: true,
+      globalSettings: {
+        ...state.globalSettings,
+        baseMaterials: {
+          ...state.globalSettings.baseMaterials,
+          [name]: price,
+        },
+      },
+    })),
+
+  mergeBaseMaterials: (materialsMap) =>
+    set((state) => ({
+      isDirty: true,
+      globalSettings: {
+        ...state.globalSettings,
+        baseMaterials: {
+          ...state.globalSettings.baseMaterials,
+          ...materialsMap,
+        },
+      },
+    })),
+
+  addCategory: (name, type) =>
+    set((state) => ({
+      isDirty: true,
+      categories: [
+        ...state.categories,
+        { id: crypto.randomUUID(), name, type, technologies: [] },
+      ],
+    })),
+
+  renameCategory: (id, newName) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map(c => c.id === id ? { ...c, name: newName } : c)
+    })),
+
+  reorderCategory: (index, direction) =>
+    set((state) => {
+      const newCategories = [...state.categories];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= newCategories.length) return state;
+      [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
+      return { categories: newCategories, isDirty: true };
+    }),
+
+  removeCategory: (id) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.filter((c) => c.id !== id),
+      selectedCategoryId: state.selectedCategoryId === id ? null : state.selectedCategoryId,
+      selectedTechnologyId: state.selectedCategoryId === id ? null : state.selectedTechnologyId,
+    })),
+
+  addTechnology: (categoryId, name) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              technologies: [
+                ...cat.technologies,
+                {
+                  id: crypto.randomUUID(),
+                  name,
+                  notes: '',
+                  calculationType: 'MANUAL',
+                  materials: [],
+                  variants: [],
+                },
+              ],
+            }
+          : cat
+      ),
+    })),
+
+  renameTechnology: (categoryId, id, newName) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              technologies: cat.technologies.map((t) =>
+                t.id === id ? { ...t, name: newName } : t
+              ),
+            }
+          : cat
+      ),
+    })),
+
+  reorderTechnology: (categoryId, index, direction) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) => {
+        if (cat.id !== categoryId) return cat;
+        const newTechs = [...cat.technologies];
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= newTechs.length) return cat;
+        [newTechs[index], newTechs[targetIndex]] = [newTechs[targetIndex], newTechs[index]];
+        return { ...cat, technologies: newTechs };
+      }),
+    })),
+
+  updateTechnology: (categoryId, techId, updates) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              technologies: cat.technologies.map((tech) =>
+                tech.id === techId ? { ...tech, ...updates } : tech
+              ),
+            }
+          : cat
+      ),
+    })),
+
+  updateTechnologyNotes: (categoryId, techId, notes) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) =>
+        cat.id === categoryId
+          ? { ...cat, technologies: cat.technologies.map(t => t.id === techId ? { ...t, notes } : t) }
+          : cat
+      )
+    })),
+
+  removeTechnology: (categoryId, techId) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              technologies: cat.technologies.filter((tech) => tech.id !== techId),
+            }
+          : cat
+      ),
+      selectedTechnologyId: state.selectedTechnologyId === techId ? null : state.selectedTechnologyId,
+    })),
+
+  updateVariants: (categoryId, techId, variants) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              technologies: cat.technologies.map((tech) =>
+                tech.id === techId ? { ...tech, variants } : tech
+              ),
+            }
+          : cat
+      ),
+    })),
+
+  setProjectName: (name) => set({ currentProjectName: name }),
+
+  syncWithDisk: async () => {
+    const { globalSettings, categories, currentProjectName, isDirty } = get();
+    if (!isDirty) return;
+
+    const dataToSave = {
+      version: '0.6.0',
+      type: 'ARCADIA_PROJECT_BACKUP',
+      globalSettings,
+      categories
+    };
+
+    const success = await saveToDisk(dataToSave, currentProjectName);
+    if (success) {
+      set({ isDirty: false });
     }
-  )
-);
+  },
+}));
+
+// --- Mechanizm Auto-save (Debounce) ---
+let saveTimeout: ReturnType<typeof setTimeout>;
+
+useAppStore.subscribe((state, _prevState) => {
+  // Jeśli jesteśmy w Electronie i nastąpiła istotna zmiana danych (isDirty stało się true)
+  if (isElectron() && state.isDirty) {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      useAppStore.getState().syncWithDisk();
+    }, 2000); // 2000ms debounce
+  }
+});
+

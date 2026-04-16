@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Modal from '../common/Modal';
 import { useAppStore } from '../../store/useAppStore';
 import { Plus, Trash2, Save, AlertCircle, Upload, Download } from 'lucide-react';
-import { downloadMaterialsJSON } from '../../utils/jsonExporter';
+import { exportMaterialsJSON } from '../../utils/jsonExporter';
 
 interface GlobalSettingsModalProps {
   isOpen: boolean;
@@ -67,7 +67,7 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClo
     materials.forEach((m) => {
       if (m.name.trim()) baseMaterials[m.name.trim()] = m.price;
     });
-    downloadMaterialsJSON(baseMaterials);
+    exportMaterialsJSON(baseMaterials);
   };
 
   const handleImportMaterialsClick = () => {

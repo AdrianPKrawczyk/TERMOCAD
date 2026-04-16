@@ -58,8 +58,15 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
     - [x] Powiązanie `PartitionCalculator` (lokalne stany `useState`) z nadrzędnym drzewem Zustand dla danej technologii przez sprzężony `useEffect` na zmianie i inicjalizacji z góry.
     - [x] Potwierdzenie zapisu `thicknessStart`, `t1Value`, `laborCost` itp. w eksportowanych plikach `.json`.
 
+- [x] **Zadania Wykonane (v0.6.0) - Electron Transformation**:
+    - [x] Wdrożenie serwisu `storageService.ts` obsługującego zapis i odczyt z dysku przez most `window.electron`.
+    - [x] Usunięcie automatycznego `persist` (Local Storage) na rzecz kontrolowanego zapisu.
+    - [x] Dodanie mechanizmu **Auto-save** z debouncem (2000ms) działającego w środowisku Electron.
+    - [x] Wprowadzenie rozszerzenia `.termocad` dla plików projektu.
+    - [x] Aktualizacja UI (`TopBar`) o wskaźnik "Połączono z Hubem" oraz natywne okna dialogowe.
+
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.5.6**
+- Aktualna wersja programu: **0.6.0**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.

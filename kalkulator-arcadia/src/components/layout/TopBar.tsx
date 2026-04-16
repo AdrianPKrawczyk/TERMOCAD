@@ -1,15 +1,23 @@
 import React, { useState, useRef } from 'react';
-import { Settings, Save, FileCode, Upload } from 'lucide-react';
+import { Settings, Save, FileCode, Upload, Monitor, FolderOpen } from 'lucide-react';
 import GlobalSettingsModal from '../settings/GlobalSettingsModal';
 import { useAppStore } from '../../store/useAppStore';
 import { generateXML, downloadXML, downloadXLibrary } from '../../utils/xmlExporter';
-import { downloadProjectJSON } from '../../utils/jsonExporter';
+import { exportProjectJSON } from '../../utils/jsonExporter';
+import { isElectron, loadFromDisk } from '../../services/storageService';
 
 const TopBar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { categories, globalSettings, loadProjectSnapshot } = useAppStore();
+  const { 
+    categories, 
+    globalSettings, 
+    loadProjectSnapshot, 
+    currentProjectName, 
+    syncWithDisk,
+    isDirty
+  } = useAppStore();
 
   const handleExportXML = () => {
     const xml = generateXML(categories);
@@ -23,13 +31,32 @@ const TopBar: React.FC = () => {
     await downloadXLibrary(xml, `cennik_arcadia_${date}.xlibrary`);
   };
 
-  const handleExportJSON = () => {
-    downloadProjectJSON(globalSettings, categories);
+  const handleExportJSON = async () => {
+    if (isElectron()) {
+      await syncWithDisk();
+    } else {
+      exportProjectJSON(globalSettings, categories, currentProjectName);
+    }
   };
 
-  const handleImportJSONClick = () => {
-    if (fileInputRef.current) {
+  const handleImportJSONClick = async () => {
+    if (isElectron()) {
+      const data = await loadFromDisk();
+      if (data && data.globalSettings && data.categories) {
+        loadProjectSnapshot({ globalSettings: data.globalSettings, categories: data.categories });
+      }
+    } else if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const handleChangeDirectory = async () => {
+    if (isElectron() && window.electron?.selectDirectory) {
+      const path = await window.electron.selectDirectory();
+      if (path) {
+        console.log('Nowy folder projektów:', path);
+        // Można dodać informację do store o aktualnej ścieżce jeśli bridge to wspiera
+      }
     }
   };
 
@@ -62,9 +89,16 @@ const TopBar: React.FC = () => {
   return (
     <>
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-10">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold text-slate-800">Kalkulator ArCADia</h1>
-          <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-medium">v0.5.0</span>
+          <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-medium">v0.6.0</span>
+          
+          {isElectron() && (
+            <div className="flex items-center gap-1.5 ml-4 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full border border-emerald-100 shadow-sm animate-pulse-slow">
+              <Monitor size={14} />
+              <span className="text-[10px] font-black uppercase tracking-wider">Połączono z Hubem</span>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center gap-3">
@@ -88,17 +122,31 @@ const TopBar: React.FC = () => {
             <button 
               onClick={handleImportJSONClick}
               className="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-white rounded-lg transition-all"
+              title={isElectron() ? "Otwórz z dysku" : "Importuj JSON"}
             >
               <Upload size={16} />
               <span>Otwórz</span>
             </button>
             <button 
               onClick={handleExportJSON}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-white rounded-lg transition-all"
+              className={`flex items-center gap-2 px-3 py-1.5 text-sm font-bold rounded-lg transition-all ${
+                isDirty ? 'text-indigo-600 bg-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-white'
+              }`}
+              title={isElectron() ? "Zapisz na dysku" : "Pobierz JSON"}
             >
               <Save size={16} />
-              <span>Zapisz Projekt</span>
+              <span>{isElectron() && isDirty ? 'Zapisz (aktywne)' : 'Zapisz Projekt'}</span>
             </button>
+            
+            {isElectron() && (
+              <button 
+                onClick={handleChangeDirectory}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-white rounded-lg transition-all"
+                title="Zmień folder zapisu"
+              >
+                <FolderOpen size={16} />
+              </button>
+            )}
           </div>
           
           <button 
