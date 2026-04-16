@@ -64,9 +64,13 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
     - [x] Dodanie mechanizmu **Auto-save** z debouncem (2000ms) działającego w środowisku Electron.
     - [x] Wprowadzenie rozszerzenia `.termocad` dla plików projektu.
     - [x] Aktualizacja UI (`TopBar`) o wskaźnik "Połączono z Hubem" oraz natywne okna dialogowe.
+- [x] **Krok 6.1 (v0.6.1): Automatyczne wczytywanie projektu**:
+    - [x] Dodanie metody `getLastProject` do mostu Electrona (typizacja).
+    - [x] Implementacja `loadLastProjectFromDisk` w `storageService.ts`.
+    - [x] Automatyczne wczytywanie ostatnio używanego pliku przy starcie `App.tsx` (bez dialogu).
 
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.6.0**
+- Aktualna wersja programu: **0.6.1**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.

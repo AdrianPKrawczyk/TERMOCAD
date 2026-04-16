@@ -62,6 +62,21 @@ export const loadFromDisk = async (): Promise<any | null> => {
 };
 
 /**
+ * Próbuje wczytać ostatnio używany projekt bez wywoływania okna dialogowego.
+ */
+export const loadLastProjectFromDisk = async (): Promise<{ data: any; filePath: string } | null> => {
+  if (isElectron()) {
+    try {
+      return await window.electron!.getLastProject();
+    } catch (error) {
+      console.error('[Storage] Błąd podczas wczytywania ostatniego projektu:', error);
+      return null;
+    }
+  }
+  return null;
+};
+
+/**
  * Pobiera listę projektów (opcjonalnie dla Hubu).
  */
 export const getProjectsList = async (): Promise<string[]> => {
