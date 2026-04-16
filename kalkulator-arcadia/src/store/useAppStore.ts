@@ -333,13 +333,22 @@ export const useAppStore = create<AppState>()((set, get) => ({
 // --- Mechanizm Auto-save (Debounce) ---
 let saveTimeout: ReturnType<typeof setTimeout>;
 
-useAppStore.subscribe((state, _prevState) => {
-  // Jeśli jesteśmy w Electronie i nastąpiła istotna zmiana danych (isDirty stało się true)
-  if (isElectron() && state.isDirty) {
+useAppStore.subscribe((state) => {
+  if (state.isDirty) {
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-      useAppStore.getState().syncWithDisk();
-    }, 2000); // 2000ms debounce
+    saveTimeout = setTimeout(async () => {
+      if (isElectron()) {
+        await useAppStore.getState().syncWithDisk();
+      } else {
+        // Zapis do LocalStorage jako fallback dla przeglądarki
+        const dataToSave = {
+          globalSettings: state.globalSettings,
+          categories: state.categories
+        };
+        localStorage.setItem('termocad_backup', JSON.stringify(dataToSave));
+        useAppStore.setState({ isDirty: false });
+        console.log('[Storage] Auto-zapis do LocalStorage');
+      }
+    }, 2000);
   }
 });
-
