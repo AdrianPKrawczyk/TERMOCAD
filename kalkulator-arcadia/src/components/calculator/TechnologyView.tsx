@@ -3,7 +3,7 @@ import { Calculator, Edit3, ChevronRight, FileText, ChevronDown, ChevronUp, Eye 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAppStore } from '../../store/useAppStore';
-import type { Variant, TechnologyMaterial, Technology } from '../../store/useAppStore';
+import type { Variant, TechnologyMaterial, Technology, TechnologyLabor, TechnologyFixedCost } from '../../store/useAppStore';
 import PartitionCalculator from './PartitionCalculator';
 import JoineryCalculator from './JoineryCalculator';
 import PVCalculator from './PVCalculator';
@@ -61,6 +61,14 @@ const TechnologyView: React.FC = () => {
     updateTechnology(category.id, technology.id, { materials });
   };
 
+  const handleUpdateLabor = (laborEntries: TechnologyLabor[]) => {
+    updateTechnology(category.id, technology.id, { laborEntries });
+  };
+
+  const handleUpdateFixedCosts = (fixedCostEntries: TechnologyFixedCost[]) => {
+    updateTechnology(category.id, technology.id, { fixedCostEntries });
+  };
+
   const handleUpdateParameters = (updates: Partial<Technology>) => {
     updateTechnology(category.id, technology.id, updates);
   };
@@ -72,7 +80,11 @@ const TechnologyView: React.FC = () => {
           <PartitionCalculator 
             technology={technology}
             initialMaterials={technology.materials}
+            initialLabor={technology.laborEntries || []}
+            initialFixedCosts={technology.fixedCostEntries || []}
             onUpdateMaterials={handleUpdateMaterials}
+            onUpdateLabor={handleUpdateLabor}
+            onUpdateFixedCosts={handleUpdateFixedCosts}
             onGenerate={handleUpdateVariants}
             onUpdateParameters={handleUpdateParameters}
           />

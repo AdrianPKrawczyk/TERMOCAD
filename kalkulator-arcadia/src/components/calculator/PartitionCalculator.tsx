@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { Play, AlertCircle, Settings2 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import type { Variant, TechnologyMaterial, Technology } from '../../store/useAppStore';
+import type { Variant, TechnologyMaterial, Technology, TechnologyLabor, TechnologyFixedCost } from '../../store/useAppStore';
 import MaterialTable from './MaterialTable';
+import LaborTable from './LaborTable';
+import FixedCostTable from './FixedCostTable';
 
 interface PartitionCalculatorProps {
   technology: Technology;
   onGenerate: (variants: Variant[]) => void;
   initialMaterials?: TechnologyMaterial[];
+  initialLabor?: TechnologyLabor[];
+  initialFixedCosts?: TechnologyFixedCost[];
   onUpdateMaterials: (materials: TechnologyMaterial[]) => void;
+  onUpdateLabor: (labor: TechnologyLabor[]) => void;
+  onUpdateFixedCosts: (fixedCosts: TechnologyFixedCost[]) => void;
   onUpdateParameters: (params: Partial<Technology>) => void;
 }
 
@@ -16,7 +22,11 @@ const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({
   technology,
   onGenerate, 
   initialMaterials = [], 
+  initialLabor = [],
+  initialFixedCosts = [],
   onUpdateMaterials,
+  onUpdateLabor,
+  onUpdateFixedCosts,
   onUpdateParameters
 }) => {
   const { globalSettings } = useAppStore();
@@ -89,12 +99,25 @@ const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({
         return sum + (price * m.usage);
       }, 0);
 
+    // Oblicz statyczną robociznę z listy (bez progów grubości)
+    const listLaborCost = initialLabor.reduce((sum, l) => {
+      const price = globalSettings.baseLabor[l.laborId] || 0;
+      return sum + (price * l.usage);
+    }, 0);
+
+    // Oblicz koszty stałe z listy
+    const listFixedCosts = initialFixedCosts.reduce((sum, f) => {
+      const price = globalSettings.baseFixedCosts[f.costId] || 0;
+      return sum + (price * f.usage);
+    }, 0);
+
     for (let t = thicknessStart; t <= thicknessEnd; t += thicknessStep) {
       // WZÓR: 
       // Koszt bazowy = (grubość m) * cena m3 * zużycie (zazwyczaj 1.0)
       const materialCostBase = (t / 100) * basePrice * baseMatInfo.usage;
       
-      let currentLaborCost = laborCost;
+      // Sumuj ręcznie wpisaną robociznę z robocizną z listy przed nałożeniem progów
+      let currentLaborCost = laborCost + listLaborCost;
       
       // Sprawdzanie progów od największego do najmniejszego
       if (t2Active && t > t2Value) {
@@ -103,7 +126,8 @@ const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({
         currentLaborCost *= t1Mult;
       }
 
-      const totalCost = materialCostBase + otherMaterialsCost + fixedCost + currentLaborCost;
+      // Całkowitykoszt
+      const totalCost = materialCostBase + otherMaterialsCost + fixedCost + listFixedCosts + currentLaborCost;
 
       newVariants.push({
         id: crypto.randomUUID(),
@@ -270,11 +294,19 @@ const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({
           
           <hr className="border-slate-200" />
 
-          {/* SEKCJA 2: KONFIGURACJA MATERIAŁÓW (POD SPODEM) */}
+          {/* SEKCJA 2: KONFIGURACJA MATERIAŁÓW I KOSZTÓW (POD SPODEM) */}
           <div className="space-y-4">
             <MaterialTable 
               materials={initialMaterials} 
               onUpdate={onUpdateMaterials} 
+            />
+            <LaborTable
+              laborEntries={initialLabor}
+              onUpdate={onUpdateLabor}
+            />
+            <FixedCostTable
+              fixedCostEntries={initialFixedCosts}
+              onUpdate={onUpdateFixedCosts}
             />
           </div>
         </div>

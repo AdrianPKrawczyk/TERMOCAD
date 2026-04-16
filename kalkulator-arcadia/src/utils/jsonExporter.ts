@@ -41,14 +41,14 @@ export const exportProjectJSON = async (globalSettings: GlobalSettings, categori
 };
 
 /**
- * Zapisuje tylko bazę materiałową
+ * Zapisuje zmienne globalne (Materiały, Robocizna, Koszty stałe)
  */
-export const exportMaterialsJSON = (baseMaterials: Record<string, number>) => {
+export const exportGlobalsJSON = (globalSettings: GlobalSettings) => {
   const date = new Date().toISOString().split('T')[0];
   const data = {
     version: '0.6.0',
-    type: 'ARCADIA_MATERIALS_BACKUP',
-    baseMaterials
+    type: 'ARCADIA_GLOBALS_BACKUP',
+    globalSettings
   };
-  triggerDownload(data, `Baza_Materialow_Arcadia_${date}.json`);
+  triggerDownload(data, `Baza_Cennikowa_Arcadia_${date}.json`);
 };

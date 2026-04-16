@@ -8,6 +8,8 @@ export type CategoryType = 'PARTITIONS' | 'JOINERY' | 'INSTALLATIONS';
 export interface GlobalSettings {
   hourlyRate: number; // np. 45 zł/h
   baseMaterials: Record<string, number>; // np. { "EPS_036": 245, "Klej": 42.5 }
+  baseLabor: Record<string, number>; // np. { "Kładzenie tynku": 35 }
+  baseFixedCosts: Record<string, number>; // np. { "Rusztowania": 1500 }
 }
 
 export interface Variant {
@@ -26,6 +28,16 @@ export interface TechnologyMaterial {
   isBase: boolean;
 }
 
+export interface TechnologyLabor {
+  laborId: string;
+  usage: number; // zazwyczaj 1.0 (np. sztuk / jednostek przeliczeniowych) lub proporcjonalnie
+}
+
+export interface TechnologyFixedCost {
+  costId: string;
+  usage: number; // szt. lub inne przeliczniki
+}
+
 export interface Technology {
   id: string;
   name: string;
@@ -34,6 +46,9 @@ export interface Technology {
   
   // Konfiguracja dla Przegród (PARTITIONS)
   materials: TechnologyMaterial[];
+  laborEntries?: TechnologyLabor[];
+  fixedCostEntries?: TechnologyFixedCost[];
+  
   thicknessStart?: number;
   thicknessEnd?: number;
   thicknessStep?: number;
@@ -84,6 +99,8 @@ interface AppState {
   // Akcje - Ustawienia Globalne
   updateGlobalSettings: (settings: GlobalSettings) => void;
   addBaseMaterial: (name: string, price: number) => void;
+  addBaseLabor: (name: string, price: number) => void;
+  addBaseFixedCost: (name: string, price: number) => void;
   
   // Akcje - Kategorie
   addCategory: (name: string, type: CategoryType) => void;
@@ -103,7 +120,7 @@ interface AppState {
   
   // Akcje - Import Projektu/Zmiennych
   loadProjectSnapshot: (snapshot: { globalSettings: GlobalSettings; categories: Category[] }, fileName?: string) => void;
-  mergeBaseMaterials: (materialsMap: Record<string, number>) => void;
+  mergeGlobalVariables: (globals: Partial<GlobalSettings>) => void;
   
   // Akcje - Electron/System
   syncWithDisk: () => Promise<void>;
@@ -122,6 +139,14 @@ const defaultGlobalSettings: GlobalSettings = {
     'Okno PVC (szt)': 800,
     'Panel PV 400W (szt)': 600,
   },
+  baseLabor: {
+    'Montaż rusztowań (m2)': 15.0,
+    'Układanie styropianu (m2)': 35.0,
+  },
+  baseFixedCosts: {
+    'Zabezpieczenie placu budowy (kpl)': 500,
+    'Wywóz gruzu (kontener)': 800,
+  }
 };
 
 // --- Store ---
@@ -137,15 +162,34 @@ export const useAppStore = create<AppState>()((set, get) => ({
   setSelection: (categoryId, technologyId) =>
     set({ selectedCategoryId: categoryId, selectedTechnologyId: technologyId }),
 
-  loadProjectSnapshot: (snapshot, fileName) =>
+  loadProjectSnapshot: (snapshot, fileName) => {
+    // Backward compatibility: fill missing arrays with defaults
+    const patchedCategories = snapshot.categories.map(cat => ({
+      ...cat,
+      technologies: cat.technologies.map(tech => ({
+        ...tech,
+        laborEntries: tech.laborEntries || [],
+        fixedCostEntries: tech.fixedCostEntries || []
+      }))
+    }));
+
+    const patchedGlobals = {
+      ...defaultGlobalSettings,
+      ...snapshot.globalSettings,
+      baseMaterials: snapshot.globalSettings.baseMaterials || {},
+      baseLabor: snapshot.globalSettings.baseLabor || {},
+      baseFixedCosts: snapshot.globalSettings.baseFixedCosts || {}
+    };
+
     set({
-      globalSettings: snapshot.globalSettings,
-      categories: snapshot.categories,
+      globalSettings: patchedGlobals,
+      categories: patchedCategories,
       selectedCategoryId: null,
       selectedTechnologyId: null,
       currentProjectName: fileName || get().currentProjectName,
       isDirty: false,
-    }),
+    });
+  },
 
   updateGlobalSettings: (settings) => 
     set({ globalSettings: settings, isDirty: true }),
@@ -162,15 +206,48 @@ export const useAppStore = create<AppState>()((set, get) => ({
       },
     })),
 
-  mergeBaseMaterials: (materialsMap) =>
+  addBaseLabor: (name, price) =>
+    set((state) => ({
+      isDirty: true,
+      globalSettings: {
+        ...state.globalSettings,
+        baseLabor: {
+          ...state.globalSettings.baseLabor,
+          [name]: price,
+        },
+      },
+    })),
+
+  addBaseFixedCost: (name, price) =>
+    set((state) => ({
+      isDirty: true,
+      globalSettings: {
+        ...state.globalSettings,
+        baseFixedCosts: {
+          ...state.globalSettings.baseFixedCosts,
+          [name]: price,
+        },
+      },
+    })),
+
+  mergeGlobalVariables: (globals) =>
     set((state) => ({
       isDirty: true,
       globalSettings: {
         ...state.globalSettings,
         baseMaterials: {
           ...state.globalSettings.baseMaterials,
-          ...materialsMap,
+          ...(globals.baseMaterials || {}),
         },
+        baseLabor: {
+          ...state.globalSettings.baseLabor,
+          ...(globals.baseLabor || {}),
+        },
+        baseFixedCosts: {
+          ...state.globalSettings.baseFixedCosts,
+          ...(globals.baseFixedCosts || {}),
+        },
+        hourlyRate: globals.hourlyRate !== undefined ? globals.hourlyRate : state.globalSettings.hourlyRate
       },
     })),
 
@@ -221,6 +298,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
                   notes: '',
                   calculationType: 'MANUAL',
                   materials: [],
+                  laborEntries: [],
+                  fixedCostEntries: [],
                   variants: [],
                 },
               ],
@@ -311,6 +390,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
           name: `${sourceTech.name} (Kopia)`,
           // Deep clone for arrays
           materials: sourceTech.materials.map(m => ({ ...m })),
+          laborEntries: (sourceTech.laborEntries || []).map(l => ({ ...l })),
+          fixedCostEntries: (sourceTech.fixedCostEntries || []).map(f => ({ ...f })),
           variants: sourceTech.variants.map(v => ({ ...v, id: crypto.randomUUID() }))
         };
 
