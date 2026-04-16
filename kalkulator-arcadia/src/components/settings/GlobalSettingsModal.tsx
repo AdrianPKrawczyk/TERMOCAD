@@ -12,7 +12,7 @@ interface GlobalSettingsModalProps {
 type TabType = 'MATERIALS' | 'LABOR' | 'FIXED_COSTS';
 
 const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClose }) => {
-  const { globalSettings, updateGlobalSettings, mergeGlobalVariables } = useAppStore();
+  const { globalSettings, updateGlobalSettings } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [activeTab, setActiveTab] = useState<TabType>('MATERIALS');
