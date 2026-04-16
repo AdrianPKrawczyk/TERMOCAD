@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calculator, Edit3, ChevronRight, FileText, ChevronDown, ChevronUp, Eye } from 'lucide-react';
+import { Calculator, Edit3, ChevronRight, FileText, ChevronDown, ChevronUp, Eye, Lock, Unlock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAppStore } from '../../store/useAppStore';
@@ -57,6 +57,10 @@ const TechnologyView: React.FC = () => {
     updateVariants(category.id, technology.id, variants);
   };
 
+  const handleToggleLock = () => {
+    updateTechnology(category.id, technology.id, { isLocked: !technology.isLocked });
+  };
+
   const handleUpdateMaterials = (materials: TechnologyMaterial[]) => {
     updateTechnology(category.id, technology.id, { materials });
   };
@@ -90,9 +94,21 @@ const TechnologyView: React.FC = () => {
           />
         );
       case 'JOINERY':
-        return <JoineryCalculator onGenerate={handleUpdateVariants} />;
+        return (
+          <JoineryCalculator 
+            technology={technology} 
+            onGenerate={handleUpdateVariants} 
+            onUpdateParameters={handleUpdateParameters}
+          />
+        );
       case 'INSTALLATIONS':
-        return <PVCalculator onGenerate={handleUpdateVariants} />;
+        return (
+          <PVCalculator 
+            technology={technology} 
+            onGenerate={handleUpdateVariants} 
+            onUpdateParameters={handleUpdateParameters}
+          />
+        );
       default:
         return <div>Nieobsługiwany typ kategorii</div>;
     }
@@ -113,30 +129,45 @@ const TechnologyView: React.FC = () => {
           </h2>
         </div>
 
-        {/* PRZEŁĄCZNIK TRYBU */}
-        <div className="flex p-1 bg-slate-100 rounded-2xl w-fit">
-          <button 
-            onClick={() => handleModeChange('AUTO')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-              technology.calculationType === 'AUTO' 
-              ? 'bg-white text-indigo-600 shadow-sm' 
-              : 'text-slate-500 hover:text-slate-700'
+        {/* BLOKADA I PRZEŁĄCZNIK TRYBU */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleToggleLock}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+              technology.isLocked 
+              ? 'bg-amber-50 border-amber-200 text-amber-600 shadow-sm' 
+              : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'
             }`}
+            title={technology.isLocked ? 'Odblokuj przeliczanie' : 'Zablokuj przed automatycznym przeliczeniem'}
           >
-            <Calculator size={18} />
-            Kalkulator (Auto)
+            {technology.isLocked ? <Lock size={18} /> : <Unlock size={18} />}
+            {technology.isLocked ? 'Zablokowano' : 'Odblokowano'}
           </button>
-          <button 
-            onClick={() => handleModeChange('MANUAL')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-              technology.calculationType === 'MANUAL' 
-              ? 'bg-white text-indigo-600 shadow-sm' 
-              : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Edit3 size={18} />
-            Ręczne wpisywanie
-          </button>
+
+          <div className="flex p-1 bg-slate-100 rounded-2xl w-fit">
+            <button 
+              onClick={() => handleModeChange('AUTO')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                technology.calculationType === 'AUTO' 
+                ? 'bg-white text-indigo-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Calculator size={18} />
+              Kalkulator (Auto)
+            </button>
+            <button 
+              onClick={() => handleModeChange('MANUAL')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                technology.calculationType === 'MANUAL' 
+                ? 'bg-white text-indigo-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Edit3 size={18} />
+              Ręczne wpisywanie
+            </button>
+          </div>
         </div>
       </div>
 

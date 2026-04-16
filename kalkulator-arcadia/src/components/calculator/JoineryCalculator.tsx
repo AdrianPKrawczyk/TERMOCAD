@@ -1,41 +1,42 @@
 import React, { useState } from 'react';
 import { Play, Square, AlertCircle, Info } from 'lucide-react';
-import type { Variant } from '../../store/useAppStore';
+import type { Variant, Technology } from '../../store/useAppStore';
+import { generateJoineryVariants } from '../../utils/calculations';
 
 interface JoineryCalculatorProps {
+  technology: Technology;
   onGenerate: (variants: Variant[]) => void;
+  onUpdateParameters: (params: Partial<Technology>) => void;
 }
 
-const JoineryCalculator: React.FC<JoineryCalculatorProps> = ({ onGenerate }) => {
-  const [uStart, setUStart] = useState(1.1);
-  const [uEnd, setUEnd] = useState(0.6);
-  const [uStep, setUStep] = useState(0.1);
-  const [basePrice, setBasePrice] = useState(800);
-  const [fixedCost, setFixedCost] = useState(0); // Koszt montażu / stały
-  const [stepExtra, setStepExtra] = useState(50);
-  const [unit, setUnit] = useState('szt.');
+const JoineryCalculator: React.FC<JoineryCalculatorProps> = ({ technology, onGenerate, onUpdateParameters }) => {
+  const [uStart, setUStart] = useState(technology.uStart ?? 1.1);
+  const [uEnd, setUEnd] = useState(technology.uEnd ?? 0.6);
+  const [uStep, setUStep] = useState(technology.uStep ?? 0.1);
+  const [basePrice, setBasePrice] = useState(technology.uBasePrice ?? 800);
+  const [fixedCost, setFixedCost] = useState(technology.fixedCost ?? 0);
+  const [stepExtra, setStepExtra] = useState(technology.uStepExtra ?? 50);
+  const [unit, setUnit] = useState(technology.unit ?? 'szt.');
+
+  // Sync with technology change
+  React.useEffect(() => {
+     setUStart(technology.uStart ?? 1.1);
+     setUEnd(technology.uEnd ?? 0.6);
+     setUStep(technology.uStep ?? 0.1);
+     setBasePrice(technology.uBasePrice ?? 800);
+     setFixedCost(technology.fixedCost ?? 0);
+     setStepExtra(technology.uStepExtra ?? 50);
+  }, [technology.id]);
+
+  // Auto-save params
+  React.useEffect(() => {
+    onUpdateParameters({
+      uStart, uEnd, uStep, uBasePrice: basePrice, fixedCost, uStepExtra: stepExtra, unit
+    });
+  }, [uStart, uEnd, uStep, basePrice, fixedCost, stepExtra, unit]);
 
   const handleGenerate = () => {
-    const newVariants: Variant[] = [];
-    
-    // Obsługa malejącego parametru U
-    // Używamy małej delty do porównań zmiennoprzecinkowych
-    const delta = 0.00001;
-    
-    for (let u = uStart; u >= uEnd - delta; u -= uStep) {
-      // WZÓR: Cena = Cena_bazowa + ( (U_poczatkowe - U_aktualne) / Skok ) * Doplata_za_skok + Koszt_staly
-      const stepsCount = Math.round((uStart - u) / uStep);
-      const totalCost = basePrice + (stepsCount * stepExtra) + fixedCost;
-
-      newVariants.push({
-        id: crypto.randomUUID(),
-        uValue: Math.round(u * 100) / 100,
-        name: `Okno/Drzwi U=${u.toFixed(2)} W/m2K`,
-        unit: unit,
-        totalCost: Number(totalCost.toFixed(2)),
-      });
-    }
-
+    const newVariants = generateJoineryVariants(technology);
     onGenerate(newVariants);
   };
 
@@ -133,14 +134,19 @@ const JoineryCalculator: React.FC<JoineryCalculatorProps> = ({ onGenerate }) => 
       </div>
 
       <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6">
-        <div className="flex items-center gap-2 text-xs text-amber-600 font-medium font-bold">
+        <div className="flex items-center gap-2 text-xs text-amber-600 font-bold">
           <AlertCircle size={14} />
-          <span>Generowanie nadpisze listę wariantów dla tej technologii.</span>
+          <span>{technology.isLocked ? 'Uwaga: Technologia ZABLOKOWANA. Odblokuj, aby wygenerować.' : 'Generowanie nadpisze listę wariantów dla tej technologii.'}</span>
         </div>
         
         <button 
           onClick={handleGenerate}
-          className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all transform active:scale-95 text-sm"
+          disabled={technology.isLocked}
+          className={`flex items-center gap-2 px-6 py-2.5 font-bold rounded-xl shadow-lg transition-all transform active:scale-95 text-sm ${
+            technology.isLocked 
+            ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
+            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
+          }`}
         >
           <Play size={18} fill="currentColor" />
           Generuj warianty stolarki

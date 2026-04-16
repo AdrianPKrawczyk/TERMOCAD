@@ -11,7 +11,8 @@ import {
   Square,
   Sun,
   Trash2,
-  Copy
+  Copy,
+  RefreshCw
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { CategoryType } from '../../store/useAppStore';
@@ -29,7 +30,8 @@ const Sidebar: React.FC = () => {
     removeTechnology,
     duplicateTechnology,
     selectedTechnologyId, 
-    setSelection 
+    setSelection,
+    recalculateCategoryTechnologies
   } = useAppStore();
 
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -184,6 +186,13 @@ const Sidebar: React.FC = () => {
                   {editingId !== cat.id && (
                     <button onClick={(e) => startEditing(cat.id, cat.name, e)} className="p-1 hover:text-indigo-400"><Pencil size={12}/></button>
                   )}
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); if(confirm('Przeliczyć wszystkie technologie w tej kategorii? (Z pominięciem zablokowanych)')) recalculateCategoryTechnologies(cat.id); }} 
+                    className="p-1 hover:text-white"
+                    title="Przelicz kategorię"
+                  >
+                    <RefreshCw size={12}/>
+                  </button>
                   <button onClick={(e) => handleRemoveCategory(cat.id, cat.name, e)} className="p-1 hover:text-red-400 text-slate-500"><Trash2 size={12}/></button>
                   <button onClick={(e) => { e.stopPropagation(); setAddingTechTo(cat.id); setNewTechValue(''); }} className="p-1 hover:text-white bg-slate-800 rounded ml-1"><Plus size={12}/></button>
                 </div>

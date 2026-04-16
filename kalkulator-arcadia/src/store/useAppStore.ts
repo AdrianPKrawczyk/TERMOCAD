@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { isElectron, saveToDisk } from '../services/storageService';
+import { generatePartitionVariants, generateJoineryVariants, generatePVVariants } from '../utils/calculations';
 
 // --- Interfejsy ---
 
@@ -42,6 +43,8 @@ export interface Technology {
   id: string;
   name: string;
   calculationType: 'AUTO' | 'MANUAL';
+  isLocked?: boolean;
+  unit?: string;
   notes: string;
   
   // Konfiguracja dla Przegród (PARTITIONS)
@@ -117,6 +120,9 @@ interface AppState {
   removeTechnology: (categoryId: string, techId: string) => void;
   duplicateTechnology: (categoryId: string, techId: string) => void;
   updateVariants: (categoryId: string, techId: string, variants: Variant[]) => void;
+  recalculateTechnology: (categoryId: string, techId: string) => void;
+  recalculateCategoryTechnologies: (categoryId: string) => void;
+  recalculateAllTechnologies: () => void;
   
   // Akcje - Import Projektu/Zmiennych
   loadProjectSnapshot: (snapshot: { globalSettings: GlobalSettings; categories: Category[] }, fileName?: string) => void;
@@ -169,7 +175,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
       technologies: cat.technologies.map(tech => ({
         ...tech,
         laborEntries: tech.laborEntries || [],
-        fixedCostEntries: tech.fixedCostEntries || []
+        fixedCostEntries: tech.fixedCostEntries || [],
+        isLocked: tech.isLocked || false
       }))
     }));
 
@@ -297,6 +304,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
                   name,
                   notes: '',
                   calculationType: 'MANUAL',
+                  isLocked: false,
+                  unit: categoryId === 'INSTALLATIONS' ? 'zł/kWp' : 'szt.',
                   materials: [],
                   laborEntries: [],
                   fixedCostEntries: [],
@@ -416,6 +425,80 @@ export const useAppStore = create<AppState>()((set, get) => ({
             }
           : cat
       ),
+    })),
+
+  recalculateTechnology: (categoryId, techId) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) => {
+        if (cat.id !== categoryId) return cat;
+        return {
+          ...cat,
+          technologies: cat.technologies.map((tech) => {
+            if (tech.id !== techId || tech.calculationType === 'MANUAL') return tech;
+            
+            let newVariants: Variant[] = [];
+            if (cat.type === 'PARTITIONS') {
+              newVariants = generatePartitionVariants(tech, state.globalSettings);
+            } else if (cat.type === 'JOINERY') {
+              newVariants = generateJoineryVariants(tech);
+            } else if (cat.type === 'INSTALLATIONS') {
+              newVariants = generatePVVariants(tech);
+            }
+            
+            return { ...tech, variants: newVariants };
+          })
+        };
+      })
+    })),
+
+  recalculateCategoryTechnologies: (categoryId) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) => {
+        if (cat.id !== categoryId) return cat;
+        return {
+          ...cat,
+          technologies: cat.technologies.map((tech) => {
+            if (tech.calculationType === 'MANUAL' || tech.isLocked) return tech;
+            
+            let newVariants: Variant[] = [];
+            if (cat.type === 'PARTITIONS') {
+              newVariants = generatePartitionVariants(tech, state.globalSettings);
+            } else if (cat.type === 'JOINERY') {
+              newVariants = generateJoineryVariants(tech);
+            } else if (cat.type === 'INSTALLATIONS') {
+              newVariants = generatePVVariants(tech);
+            }
+            
+            return { ...tech, variants: newVariants };
+          })
+        };
+      })
+    })),
+
+  recalculateAllTechnologies: () =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) => {
+        return {
+          ...cat,
+          technologies: cat.technologies.map((tech) => {
+            if (tech.calculationType === 'MANUAL' || tech.isLocked) return tech;
+            
+            let newVariants: Variant[] = [];
+            if (cat.type === 'PARTITIONS') {
+              newVariants = generatePartitionVariants(tech, state.globalSettings);
+            } else if (cat.type === 'JOINERY') {
+              newVariants = generateJoineryVariants(tech);
+            } else if (cat.type === 'INSTALLATIONS') {
+              newVariants = generatePVVariants(tech);
+            }
+            
+            return { ...tech, variants: newVariants };
+          })
+        };
+      })
     })),
 
   setProjectName: (name) => set({ currentProjectName: name }),

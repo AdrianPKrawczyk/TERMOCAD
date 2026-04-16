@@ -5,6 +5,7 @@ import type { Variant, TechnologyMaterial, Technology, TechnologyLabor, Technolo
 import MaterialTable from './MaterialTable';
 import LaborTable from './LaborTable';
 import FixedCostTable from './FixedCostTable';
+import { generatePartitionVariants } from '../../utils/calculations';
 
 interface PartitionCalculatorProps {
   technology: Technology;
@@ -80,64 +81,11 @@ const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({
   }, [thicknessStart, thicknessEnd, thicknessStep, fixedCost, laborCost, t1Active, t1Value, t1Mult, t2Active, t2Value, t2Mult]);
 
   const handleGenerate = () => {
-    const newVariants: Variant[] = [];
-    
-    // Znajdź materiał bazowy
-    const baseMatInfo = initialMaterials.find(m => m.isBase);
-    if (!baseMatInfo) {
+    const newVariants = generatePartitionVariants(technology, globalSettings);
+    if (newVariants.length === 0) {
       alert('Musisz zaznaczyć jeden materiał jako BAZOWY (skalowany z grubością).');
       return;
     }
-
-    const basePrice = globalSettings.baseMaterials[baseMatInfo.materialId] || 0;
-    
-    // Oblicz koszt stały z pozostałych materiałów
-    const otherMaterialsCost = initialMaterials
-      .filter(m => !m.isBase)
-      .reduce((sum, m) => {
-        const price = globalSettings.baseMaterials[m.materialId] || 0;
-        return sum + (price * m.usage);
-      }, 0);
-
-    // Oblicz statyczną robociznę z listy (bez progów grubości)
-    const listLaborCost = initialLabor.reduce((sum, l) => {
-      const price = globalSettings.baseLabor[l.laborId] || 0;
-      return sum + (price * l.usage);
-    }, 0);
-
-    // Oblicz koszty stałe z listy
-    const listFixedCosts = initialFixedCosts.reduce((sum, f) => {
-      const price = globalSettings.baseFixedCosts[f.costId] || 0;
-      return sum + (price * f.usage);
-    }, 0);
-
-    for (let t = thicknessStart; t <= thicknessEnd; t += thicknessStep) {
-      // WZÓR: 
-      // Koszt bazowy = (grubość m) * cena m3 * zużycie (zazwyczaj 1.0)
-      const materialCostBase = (t / 100) * basePrice * baseMatInfo.usage;
-      
-      // Sumuj ręcznie wpisaną robociznę z robocizną z listy przed nałożeniem progów
-      let currentLaborCost = laborCost + listLaborCost;
-      
-      // Sprawdzanie progów od największego do najmniejszego
-      if (t2Active && t > t2Value) {
-        currentLaborCost *= t2Mult;
-      } else if (t1Active && t > t1Value) {
-        currentLaborCost *= t1Mult;
-      }
-
-      // Całkowitykoszt
-      const totalCost = materialCostBase + otherMaterialsCost + fixedCost + listFixedCosts + currentLaborCost;
-
-      newVariants.push({
-        id: crypto.randomUUID(),
-        thickness: t,
-        name: `${baseMatInfo.materialId.split('(')[0].trim()} - ${t}cm`,
-        unit: 'zł/m2',
-        totalCost: Number(totalCost.toFixed(2)),
-      });
-    }
-
     onGenerate(newVariants);
   };
 
@@ -314,12 +262,19 @@ const PartitionCalculator: React.FC<PartitionCalculatorProps> = ({
         <div className="mt-12 flex items-center justify-between border-t border-slate-200 pt-8">
           <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100">
             <AlertCircle size={16} className="text-amber-500" />
-            <span className="text-xs text-amber-700 font-bold uppercase tracking-tight">Uwaga: Generowanie zastąpi istniejące warianty.</span>
+            <span className="text-xs text-amber-700 font-bold uppercase tracking-tight">
+              {technology.isLocked ? 'Uwaga: Technologia jest ZABLOKOWANA. Odblokuj, aby wygenerować.' : 'Uwaga: Generowanie zastąpi istniejące warianty.'}
+            </span>
           </div>
           
           <button 
             onClick={handleGenerate}
-            className="flex items-center gap-3 px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-200 transition-all transform active:scale-95 text-base"
+            disabled={technology.isLocked}
+            className={`flex items-center gap-3 px-10 py-4 font-black rounded-2xl shadow-xl transition-all transform active:scale-95 text-base ${
+              technology.isLocked 
+              ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
+            }`}
           >
             <Play size={20} fill="currentColor" />
             Generuj tabelę wariantów

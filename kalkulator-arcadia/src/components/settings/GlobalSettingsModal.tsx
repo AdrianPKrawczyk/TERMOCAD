@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Modal from '../common/Modal';
 import { useAppStore } from '../../store/useAppStore';
-import { Plus, Trash2, Save, AlertCircle, Upload, Download, Layers, Wrench, Briefcase } from 'lucide-react';
+import { Plus, Trash2, Save, AlertCircle, Upload, Download, Layers, Wrench, Briefcase, RefreshCw } from 'lucide-react';
 import { exportGlobalsJSON } from '../../utils/jsonExporter';
 
 interface GlobalSettingsModalProps {
@@ -12,7 +12,7 @@ interface GlobalSettingsModalProps {
 type TabType = 'MATERIALS' | 'LABOR' | 'FIXED_COSTS';
 
 const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClose }) => {
-  const { globalSettings, updateGlobalSettings } = useAppStore();
+  const { globalSettings, updateGlobalSettings, recalculateAllTechnologies } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [activeTab, setActiveTab] = useState<TabType>('MATERIALS');
@@ -207,6 +207,14 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClo
               title="Eksportuj wszystko do pliku .json"
             >
               <Download size={14} /> Eksport
+            </button>
+            <div className="w-px h-6 bg-slate-200 mx-1" />
+            <button 
+              onClick={() => { if(confirm('Przeliczyć WSZYSTKIE technologie w projekcie? (Z pominięciem zablokowanych)')) recalculateAllTechnologies(); }}
+              className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-black text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-amber-200"
+              title="Przelicz wszystkie warianty we wszystkich kategoriach"
+            >
+              <RefreshCw size={14} /> Przelicz wszystko
             </button>
           </div>
         </div>

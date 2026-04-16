@@ -72,14 +72,15 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
     - [x] Dodanie metody `duplicateTechnology` w strukturze stanów Zustand `useAppStore.ts`.
     - [x] Wdrożenie przycisku "kopiowania" z ikoną na lewym pasku bocznym `Sidebar.tsx`.
 
-- [x] **Krok 7 (v0.7.0): Zaawansowane listy kosztów (Robocizna i Stałe)**:
-    - [x] Podział globalnych ustawień na zakładki powielające "Materiały" o "Robociznę" i "Koszty stałe". 
-    - [x] Wdrożenie mechanizmów `LaborTable` i `FixedCostTable` zintegrowanych do widoku Technologii (kalkulator ścian).
-    - [x] Bezpieczne scalenie plików `.termocad` sprzed wersji z nowymi pustymi tablicami.
-    - [x] Rozszerzenie działania eksportowania na "Baza Cennikowa".
+- [x] **Krok 7.1 (v0.7.1): Masowe przeliczanie i blokady (Kłódki)**:
+    - [x] Wydzielenie logiki matematycznej do `src/utils/calculations.ts`.
+    - [x] Wdrożenie mechanizmu `isLocked` dla technologii.
+    - [x] Dodanie przycisku "Przelicz kategorię" w Sidebarze.
+    - [x] Dodanie przycisku "Przelicz wszystko" w modalu ustawień globalnych.
+    - [x] Integracja wizualna kłódek i blokowania generowania w kalkulatorach.
 
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.7.0**
+- Aktualna wersja programu: **0.7.1**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.

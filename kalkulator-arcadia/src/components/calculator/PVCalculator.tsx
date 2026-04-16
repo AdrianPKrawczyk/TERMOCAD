@@ -1,38 +1,42 @@
 import React, { useState } from 'react';
 import { Play, Sun, AlertCircle } from 'lucide-react';
-import type { Variant } from '../../store/useAppStore';
+import type { Variant, Technology } from '../../store/useAppStore';
+import { generatePVVariants } from '../../utils/calculations';
 
 interface PVCalculatorProps {
+  technology: Technology;
   onGenerate: (variants: Variant[]) => void;
+  onUpdateParameters: (params: Partial<Technology>) => void;
 }
 
-const PVCalculator: React.FC<PVCalculatorProps> = ({ onGenerate }) => {
-  const [effStart, setEffStart] = useState(18);
-  const [effEnd, setEffEnd] = useState(25);
-  const [effStep, setEffStep] = useState(1);
-  const [basePrice, setBasePrice] = useState(6000); // Cena za kWp
-  const [fixedCost, setFixedCost] = useState(0); // Koszty stałe
-  const [stepExtra, setStepExtra] = useState(200);
-  const [unit, setUnit] = useState('zł/kWp');
+const PVCalculator: React.FC<PVCalculatorProps> = ({ technology, onGenerate, onUpdateParameters }) => {
+  const [effStart, setEffStart] = useState(technology.effStart ?? 18);
+  const [effEnd, setEffEnd] = useState(technology.effEnd ?? 25);
+  const [effStep, setEffStep] = useState(technology.effStep ?? 1);
+  const [basePrice, setBasePrice] = useState(technology.effBasePrice ?? 6000);
+  const [fixedCost, setFixedCost] = useState(technology.fixedCost ?? 0);
+  const [stepExtra, setStepExtra] = useState(technology.effStepExtra ?? 200);
+  const [unit, setUnit] = useState(technology.unit ?? 'zł/kWp');
+
+  // Sync
+  React.useEffect(() => {
+    setEffStart(technology.effStart ?? 18);
+    setEffEnd(technology.effEnd ?? 25);
+    setEffStep(technology.effStep ?? 1);
+    setBasePrice(technology.effBasePrice ?? 6000);
+    setFixedCost(technology.fixedCost ?? 0);
+    setStepExtra(technology.effStepExtra ?? 200);
+  }, [technology.id]);
+
+  // Auto-save
+  React.useEffect(() => {
+    onUpdateParameters({
+      effStart, effEnd, effStep, effBasePrice: basePrice, fixedCost, effStepExtra: stepExtra, unit
+    });
+  }, [effStart, effEnd, effStep, basePrice, fixedCost, stepExtra, unit]);
 
   const handleGenerate = () => {
-    const newVariants: Variant[] = [];
-    const delta = 0.00001;
-
-    for (let eff = effStart; eff <= effEnd + delta; eff += effStep) {
-      // WZÓR: Cena = Cena_bazowa + ( (Sprawnosc_aktualna - Sprawnosc_poczatkowa) / Skok ) * Doplata_za_skok + Koszty_stale
-      const stepsCount = Math.round((eff - effStart) / effStep);
-      const totalCost = basePrice + (stepsCount * stepExtra) + fixedCost;
-
-      newVariants.push({
-        id: crypto.randomUUID(),
-        efficiency: Math.round(eff * 100) / 100,
-        name: `Instalacja PV - sprawność ${eff.toFixed(1)}%`,
-        unit: unit,
-        totalCost: Number(totalCost.toFixed(2)),
-      });
-    }
-
+    const newVariants = generatePVVariants(technology);
     onGenerate(newVariants);
   };
 
@@ -122,14 +126,19 @@ const PVCalculator: React.FC<PVCalculatorProps> = ({ onGenerate }) => {
       </div>
 
       <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6">
-        <div className="flex items-center gap-2 text-xs text-amber-600 font-medium font-bold">
+        <div className="flex items-center gap-2 text-xs text-amber-600 font-bold">
           <AlertCircle size={14} />
-          <span>Uwaga: Nowa lista nadpisze poprzednie dane dla PV.</span>
+          <span>{technology.isLocked ? 'Uwaga: Technologia ZABLOKOWANA. Odblokuj, aby wygenerować.' : 'Uwaga: Nowa lista nadpisze poprzednie dane dla PV.'}</span>
         </div>
         
         <button 
           onClick={handleGenerate}
-          className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all transform active:scale-95 text-sm"
+          disabled={technology.isLocked}
+          className={`flex items-center gap-2 px-6 py-2.5 font-bold rounded-xl shadow-lg transition-all transform active:scale-95 text-sm ${
+            technology.isLocked 
+            ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
+            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
+          }`}
         >
           <Play size={18} fill="currentColor" />
           Generuj warianty instalacji PV
