@@ -98,6 +98,7 @@ interface AppState {
   updateTechnology: (categoryId: string, techId: string, updates: Partial<Technology>) => void;
   updateTechnologyNotes: (categoryId: string, techId: string, notes: string) => void;
   removeTechnology: (categoryId: string, techId: string) => void;
+  duplicateTechnology: (categoryId: string, techId: string) => void;
   updateVariants: (categoryId: string, techId: string, variants: Variant[]) => void;
   
   // Akcje - Import Projektu/Zmiennych
@@ -293,6 +294,32 @@ export const useAppStore = create<AppState>()((set, get) => ({
           : cat
       ),
       selectedTechnologyId: state.selectedTechnologyId === techId ? null : state.selectedTechnologyId,
+    })),
+
+  duplicateTechnology: (categoryId, techId) =>
+    set((state) => ({
+      isDirty: true,
+      categories: state.categories.map((cat) => {
+        if (cat.id !== categoryId) return cat;
+        
+        const sourceTech = cat.technologies.find(t => t.id === techId);
+        if (!sourceTech) return cat;
+
+        const duplicatedTech: Technology = {
+          ...sourceTech,
+          id: crypto.randomUUID(),
+          name: `${sourceTech.name} (Kopia)`,
+          // Deep clone for arrays
+          materials: sourceTech.materials.map(m => ({ ...m })),
+          variants: sourceTech.variants.map(v => ({ ...v, id: crypto.randomUUID() }))
+        };
+
+        const sourceIndex = cat.technologies.findIndex(t => t.id === techId);
+        const newTechnologies = [...cat.technologies];
+        newTechnologies.splice(sourceIndex + 1, 0, duplicatedTech);
+
+        return { ...cat, technologies: newTechnologies };
+      })
     })),
 
   updateVariants: (categoryId, techId, variants) =>

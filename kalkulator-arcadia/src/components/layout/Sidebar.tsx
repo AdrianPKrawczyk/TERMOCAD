@@ -10,7 +10,8 @@ import {
   Home,
   Square,
   Sun,
-  Trash2
+  Trash2,
+  Copy
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { CategoryType } from '../../store/useAppStore';
@@ -26,6 +27,7 @@ const Sidebar: React.FC = () => {
     reorderTechnology,
     removeCategory,
     removeTechnology,
+    duplicateTechnology,
     selectedTechnologyId, 
     setSelection 
   } = useAppStore();
@@ -75,6 +77,11 @@ const Sidebar: React.FC = () => {
     if (window.confirm(`Czy na pewno chcesz usunąć technologię "${name}"?`)) {
       removeTechnology(catId, techId);
     }
+  };
+
+  const handleDuplicateTechnology = (catId: string, techId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    duplicateTechnology(catId, techId);
   };
 
   const handleCreateTech = (catId: string) => {
@@ -233,12 +240,21 @@ const Sidebar: React.FC = () => {
                               <button 
                                 onClick={(e) => startEditing(tech.id, tech.name, e)}
                                 className="p-1 text-slate-500 hover:text-indigo-300"
+                                title="Edytuj nazwę"
                               >
                                 <Pencil size={12}/>
                               </button>
                               <button 
+                                onClick={(e) => handleDuplicateTechnology(cat.id, tech.id, e)}
+                                className="p-1 text-slate-500 hover:text-emerald-400"
+                                title="Duplikuj technologię"
+                              >
+                                <Copy size={12}/>
+                              </button>
+                              <button 
                                 onClick={(e) => handleRemoveTechnology(cat.id, tech.id, tech.name, e)}
                                 className="p-1 text-slate-500 hover:text-red-400"
+                                title="Usuń"
                               >
                                 <Trash2 size={12}/>
                               </button>

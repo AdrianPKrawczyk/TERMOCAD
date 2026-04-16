@@ -68,9 +68,13 @@ Stworzenie lokalnej aplikacji webowej (SPA) służącej jako generator cenników
     - [x] Dodanie metody `getLastProject` do mostu Electrona (typizacja).
     - [x] Implementacja `loadLastProjectFromDisk` w `storageService.ts`.
     - [x] Automatyczne wczytywanie ostatnio używanego pliku przy starcie `App.tsx` (bez dialogu).
+- [x] **Krok 6.2 (v0.6.2): Duplikowanie technologii**:
+    - [x] Dodanie metody `duplicateTechnology` w strukturze stanów Zustand `useAppStore.ts`.
+    - [x] Wdrożenie przycisku "kopiowania" z ikoną na lewym pasku bocznym `Sidebar.tsx`.
+
 
 ## ⚠️ Ważne notatki / Zasady
-- Aktualna wersja programu: **0.6.1**
+- Aktualna wersja programu: **0.6.2**
 - Separator dziesiętny w XML: **kropka** (np. `UnitCost="124.50"`).
 - Wzory cenowe:
     - **Przegrody**: `total = (thickness/100 * baseMatPrice * baseUsage) + sum(otherMatPrice * otherUsage) + fixed + labor`.
